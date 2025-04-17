@@ -1,0 +1,5 @@
+git clone https://huggingface.co/FunAudioLLM/SenseVoiceSmall
+
+install the bart_translation_zh_yue
+
+install the small100

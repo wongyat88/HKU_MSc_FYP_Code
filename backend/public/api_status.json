@@ -1,0 +1,36 @@
+{
+    "phase1": {
+        "is_complete": false,
+        "message": "Creating Dataset for SoVits... Preprocessing audio on ASR... SPEAKER_00",
+        "data": {}
+    },
+    "phase2": {
+        "is_complete": true,
+        "message": "Translation and saving is completed",
+        "data": {}
+    },
+    "phase3": {
+        "is_complete": true,
+        "message": "Training SoVits and GPT models completed successfully.",
+        "data": {}
+    },
+    "combine": {
+        "is_complete": true,
+        "message": "Audio combination complete",
+        "data": {
+            "new_segment": {
+                "id": 15,
+                "speaker": "SPEAKER_00",
+                "start_time": 47.80409375,
+                "end_time": 53.001593750000005,
+                "duration": 4.809375000000003,
+                "file_path": "SPEAKER\\SPEAKER_00_15.wav",
+                "text": "Extending within that period or as soon as we can, the Trump tax cuts."
+            },
+            "removed_segments": [
+                10,
+                11
+            ]
+        }
+    }
+}

@@ -1,0 +1,10 @@
+venv
+__pycache__
+GPTSoVITS_v3lora_20250228
+bart_translation_zh_yue
+SenseVoiceSmall
+small100
+/backend/public/input
+/backend/public/phase1
+/backend/public/phase2
+/backend/public/phase3
