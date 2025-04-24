@@ -13,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.translation_processing import process_translation
 from app.training_processing import process_training
+from app.generation_processing import process_generation
 from app.utils.updateApiStatus import updateApiStatus
 import requests
 
@@ -50,6 +51,7 @@ INPUT_DIR = os.path.join(WORK_DIR, "input")
 PHASE1_DIR = os.path.join(WORK_DIR, "phase1")
 PHASE2_DIR = os.path.join(WORK_DIR, "phase2")
 PHASE3_DIR = os.path.join(WORK_DIR, "phase3")
+PHASE4_DIR = os.path.join(WORK_DIR, "phase4")
 API_STATUS_PATH = os.path.join(WORK_DIR, "api_status.json")
 
 # Mount the public directory for static files
@@ -144,12 +146,28 @@ async def get_status(phase: str):
 
 @app.get("/phase2/result")
 async def get_transcriptions():
+    return get_transcriptions_json()
+
+
+def get_transcriptions_json():
     transcriptions_path = os.path.join(PHASE1_DIR, "transcriptions.json")
 
     if not os.path.exists(transcriptions_path):
         return {}
 
-    with open(transcriptions_path, "r") as transcriptions_file:
+    with open(transcriptions_path, "r", encoding="utf-8") as transcriptions_file:
+        transcriptions = json.load(transcriptions_file)
+
+    return transcriptions
+
+
+def get_translated_json():
+    transcriptions_path = os.path.join(PHASE3_DIR, "translated_data.json")
+
+    if not os.path.exists(transcriptions_path):
+        return {}
+
+    with open(transcriptions_path, "r", encoding="utf-8") as transcriptions_file:
         transcriptions = json.load(transcriptions_file)
 
     return transcriptions
@@ -332,22 +350,158 @@ async def training(data: dict = Body(...)):
         )
 
 
-# @app.post("/phase3/generate")
-# async def training(data: dict = Body(...)):
-@app.get("/phase3/generate")
-async def training():
-    server_url = SOVITS_SERVER + "/generate_audio"
+@app.get("/phase4/model-list")
+async def get_model_list():
     try:
-        response = requests.post(server_url)
+        response = requests.get(SOVITS_SERVER + "/get_model_list")
         response.raise_for_status()
 
-        print("Response from SoVits Training: " + response.text)
+        # Get model list from the json on phase3 directory
+        model_name_path = os.path.join(PHASE3_DIR, "model_name.json")
+        if not os.path.exists(model_name_path):
+            return JSONResponse(
+                status_code=404, content={"error": "Model list not found"}
+            )
 
-        return {"message": "Generate successfully."}
+        with open(model_name_path, "r") as model_name_file:
+            model_name = json.load(model_name_file)
+            return {
+                "name": model_name,
+                "model_list": response.json(),
+            }
 
     except Exception as e:
         traceback.print_exc()
-        logger.error(f"Error saving training data: {str(e)}")
-        raise HTTPException(
-            status_code=500, detail=f"Error saving training data: {str(e)}"
+        return JSONResponse(
+            status_code=500, content={"error": f"Error retrieving model list: {str(e)}"}
         )
+
+
+@app.post("/phase4/generate")
+async def generate(
+    # target_speaker: str = None,
+    selectedModels: dict = None,
+    # ref_audio_path: str = None,  # This is the `file_path` : "SPEAKER\\SPEAKER_01_14.wav"
+    # target_text_path: str = None,
+    # target_language: str = None,
+    # output_path: str = None,
+    ref_freeze: bool = False,
+):
+    """
+    selected_models = {
+    "SPEAKER_00":
+        { "sovits": "SPEAKER_00_sovits_17454777141_e8_s64_l32.pth", "gpt": "SPEAKER_00_gpt_17454783252-e15.ckpt" },
+    "SPEAKER_01":
+        { "sovits": "SPEAKER_01_sovits_17454771691_e8_s80_l32.pth", "gpt": "SPEAKER_01_gpt_17454782742-e15.ckpt" }
+    }
+    """
+
+    main_data_list = []
+
+    selected_models = selectedModels["selectedModels"]
+    print("selected_models: ", selected_models)
+
+    trans_json = get_translated_json()
+    is_last_one = False
+    # Auto loop the json to generate all the audios
+    for idx, data in enumerate(trans_json):
+
+        # Check if this is the last one
+        is_last_one = idx == len(trans_json) - 1
+
+        real_ref_audio_path = ""
+        real_ref_audio_text = ""
+
+        # * Ref Audio need to be 3 to 10 seconds long
+        # * If the ref audio is too long, trim to 9 seconds and save it as temp_xxx.wav and do asr on it for ref_text
+        # * If the ref audio is too short, get `target_speaker` and random select a ref audio from the same speaker that is more than 3 seconds long
+
+        get_random_ref_audio = False
+        ref_need_to_trim = False
+
+        # Search the ref audio in json from phase1 directory
+        ref_audio_path = data["file_path"]
+        target_speaker = data["speaker"]
+
+        if data["duration"] >= 3:
+            real_ref_audio_path = PHASE1_DIR + "\\" + ref_audio_path
+            real_ref_audio_text = data["text"]
+            if data["duration"] >= 10:
+                ref_need_to_trim = True
+        else:
+            get_random_ref_audio = True
+
+        # if real_ref_audio_path is "" and real_ref_audio_text is "", mean not found the ref
+        if real_ref_audio_path == "" and real_ref_audio_text == "":
+            get_random_ref_audio = True
+
+        if get_random_ref_audio is True:
+            for i in trans_json:
+                if i["speaker"] == target_speaker and (i["duration"] >= 3):
+                    real_ref_audio_path = PHASE1_DIR + "\\" + i["file_path"]
+                    real_ref_audio_text = i["text"]
+
+                    if i["duration"] >= 10:
+                        ref_need_to_trim = True
+                    break
+
+        # Read the language json from input directory
+        get_language_setting_path = INPUT_DIR + "/language.json"
+        with open(get_language_setting_path, "r") as f:
+            language_setting = json.load(f)
+
+        # ref language "中文", "英文", "日文"
+        MAPPING_INPUT_LANGUAGES = {
+            "Cantonese": "粤语",
+            "Mandarin": "中文",
+            "English": "英文",
+            "Japanese": "日文",
+            "Korean": "韩文",
+        }
+
+        # Output language ["中文", "英文", "日文", "粤语", "中英混合", "日英混合", "多语种混合"]
+        MAPPING_OUTPUT_LANGUAGES = {
+            "Cantonese": "粤英混合",
+            "Mandarin": "中文",
+            "English": "英文",
+            "Japanese": "日文",
+            "Korean": "韩文",
+        }
+
+        log_data = {
+            "target_speaker": target_speaker,
+            "gpt_model_path": selected_models[target_speaker]["gpt"],
+            "sovits_model_path": selected_models[target_speaker]["sovits"],
+            "ref_audio_path": real_ref_audio_path,
+            "ref_text_path": real_ref_audio_text,
+            "ref_language": MAPPING_INPUT_LANGUAGES[language_setting["input_language"]],
+            "target_text_path": data["translated_text"],
+            "target_language": MAPPING_OUTPUT_LANGUAGES[
+                language_setting["output_language"]
+            ],
+            "output_path": PHASE4_DIR + "\\SPEAKER\\",
+            "output_file_name": data["file_path"].replace("SPEAKER\\", ""),
+            "ref_free": ref_freeze,
+            "api_status_path": API_STATUS_PATH,
+            "phase4_dir": PHASE4_DIR,
+            "ref_need_to_trim": ref_need_to_trim,
+            "is_last_one": is_last_one,
+        }
+        main_data_list.append(log_data)
+
+        # process_generation(
+        #     selected_models[target_speaker]["gpt"],
+        #     selected_models[target_speaker]["sovits"],
+        #     real_ref_audio_path,
+        #     real_ref_audio_text,
+        #     MAPPING_INPUT_LANGUAGES[language_setting["input_language"]],
+        #     data["translated_text"],
+        #     MAPPING_OUTPUT_LANGUAGES[language_setting["output_language"]],
+        #     PHASE4_DIR + "\\" + data["file_path"],  # output path
+        #     ref_freeze,
+        #     API_STATUS_PATH,
+        #     PHASE4_DIR,
+        #     ref_need_to_trim,
+        #     is_last_one,
+        # )
+    process_generation(main_data_list)

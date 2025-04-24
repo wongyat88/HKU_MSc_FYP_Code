@@ -1,3 +1,4 @@
+import datetime
 import os
 import threading
 import json
@@ -50,6 +51,8 @@ def _process_training_thread(input_path, phase3_dir, api_status_path):
 
     print(f"Speaker list: {speaker_list}")
 
+    model_name = {}
+
     """
     # SOVITS Training Parameters
     s_batch_size = 11
@@ -81,6 +84,14 @@ def _process_training_thread(input_path, phase3_dir, api_status_path):
                         s2_dir)
     """
     for speaker in speaker_list:
+        model_name[speaker] = {"sovits": None, "gpt": None}
+
+        # Get now Datetime and convert to int then to str
+        now = datetime.datetime.now()
+        now_str = str(int(now.timestamp()))
+
+        model_name[speaker]["sovits"] = speaker + "_sovits_" + now_str + "1"
+
         # Loop all speaker to train the SoVits models
         server_url = SOVITS_SERVER + "/training/sovits"
         try:
@@ -90,25 +101,28 @@ def _process_training_thread(input_path, phase3_dir, api_status_path):
                 False,
                 f"Start Training SoVits Model for {speaker} ...",
             )
-            # Prepare the data for the request
-            data = {
-                "s_batch_size": 11,
-                "s_epoch": 8,
-                "s_exp_name": speaker,
-                "s_text_low_lr_rate": 0.4,
-                "s_if_save_latest": True,
-                "s_if_save_every_weights": True,
-                "s_save_every_n_epoch": 4,
-                "s_gpunumbers": "0",
-                "s_pretrained_s2G": "gsv-v2final-pretrained\\s2G2333k.pth",
-                "s_pretrained_s2D": "gsv-v2final-pretrained\\s2G2333k.pth",
-                "s_if_grad_ckpt": False,
-                "s_lora_rank": 32,
-                "s2_dir": os.path.join(folder_path, speaker),
+
+            returnData = {
+                "batch_size": 11,
+                "epoch": 8,
+                "exp_name": model_name[speaker]["sovits"],
+                "text_low_lr_rate": 0.4,
+                "if_save_latest": True,
+                "if_save_every_weights": True,
+                "save_every_n_epoch": 4,
+                "gpunumbers": "0",
+                "pretrained_s2G": "gsv-v2final-pretrained/s2G2333k.pth",
+                "pretrained_s2D": "gsv-v2final-pretrained/s2G2333k.pth",
+                "if_grad_ckpt": False,
+                "lora_rank": 32,
+                "opt_dir": os.path.join(folder_path, speaker),
             }
 
             # Send the request to the server
-            response = requests.post(server_url, params=data)
+            response = requests.post(
+                server_url,
+                json=returnData,
+            )
             response.raise_for_status()
 
             print("Response from SoVits Training: " + response.text)
@@ -132,6 +146,12 @@ def _process_training_thread(input_path, phase3_dir, api_status_path):
             return
 
     for speaker in speaker_list:
+        # Get now Datetime and convert to int then to str
+        now = datetime.datetime.now()
+        now_str = str(int(now.timestamp()))
+
+        model_name[speaker]["gpt"] = speaker + "_gpt_" + now_str + "2"
+
         # Loop all speaker to train the GPT models
         server_url = SOVITS_SERVER + "/training/gpt"
         """
@@ -165,22 +185,23 @@ def _process_training_thread(input_path, phase3_dir, api_status_path):
                 False,
                 f"Start Training GPT Model for {speaker} ...",
             )
-            # Prepare the data for the request
-            data = {
-                "g_batch_size": 11,
-                "g_epoch": 15,
-                "g_exp_name": speaker,
-                "g_if_dpo": False,
-                "g_if_save_latest": True,
-                "g_if_save_every_weights": True,
-                "g_save_every_n_epoch": 5,
-                "g_gpu_numbers": "0",
-                "g_pretrained_s1": "gsv-v2final-pretrained\\s1bert25hz-5kh-longer-epoch=12-step=369668.ckpt",
-                "s1_dir": os.path.join(folder_path, speaker),
-            }
 
             # Send the request to the server
-            response = requests.post(server_url, params=data)
+            response = requests.post(
+                server_url,
+                json={
+                    "batch_size": 11,
+                    "epoch": 15,
+                    "exp_name": model_name[speaker]["gpt"],
+                    "if_dpo": False,
+                    "if_save_latest": True,
+                    "if_save_every_weights": True,
+                    "save_every_n_epoch": 5,
+                    "gpu_numbers": "0",
+                    "pretrained_s1": "gsv-v2final-pretrained/s1bert25hz-5kh-longer-epoch=12-step=369668.ckpt",
+                    "opt_dir": os.path.join(folder_path, speaker),
+                },
+            )
             response.raise_for_status()
             print("Response from GPT Training: " + response.text)
 
@@ -201,6 +222,12 @@ def _process_training_thread(input_path, phase3_dir, api_status_path):
                 f"Error: {e}",
             )
             return
+
+    # Save the model_name in json file
+    model_name_path = os.path.join(phase3_dir, "model_name.json")
+    with open(model_name_path, "w") as f:
+        json.dump(model_name, f, indent=4)
+
     # Update the API status to indicate that the training is complete
     update_status(
         api_status_path,

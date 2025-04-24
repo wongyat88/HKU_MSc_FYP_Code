@@ -98,14 +98,6 @@ const Page = () => {
         }
     }
 
-    const testGen = async () => {
-        const response = await fetchData<any>('/phase3/generate', {
-            method: 'GET',
-        })
-
-        console.log('Test gen:', response)
-    }
-
     return (
         <div className="container mx-auto p-4 dark:bg-gray-900 dark:text-white">
             <div className="mb-4 flex items-center justify-between">
@@ -115,7 +107,7 @@ const Page = () => {
                     className="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-800">
                     Save Changes
                 </button>
-                <Button onPress={testGen}>Test Gen</Button>
+                {/* <Button onPress={testGen}>Test Gen</Button> */}
             </div>
 
             {isLoading && <p>Loading transcript...</p>}

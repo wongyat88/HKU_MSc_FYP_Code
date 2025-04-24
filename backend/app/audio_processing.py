@@ -270,24 +270,26 @@ def _process_video_thread(video_path, output_folder, api_status_path):
                 alpha=0.25,
                 n_parts=4)
         """
-        server_url = SOVITS_SERVER + "/training/slice"
+        server_url = SOVITS_SERVER + "/training/slice_audio"
         speaker_processed_folder = os.path.join(output_folder, "SPEAKER_PROCESSED")
         recreate_folder(speaker_processed_folder)
         try:
+            returnData = {
+                "inp": output_folder + "/SPEAKER",
+                "opt_root": output_folder + "/SPEAKER_PROCESSED",
+                "threshold": -34,
+                "min_length": 4000,
+                "min_interval": 300,
+                "hop_size": 10,
+                "max_sil_kept": 500,
+                "_max": 0.9,
+                "alpha": 0.25,
+                "n_parts": 4,
+            }
             response = requests.post(
                 server_url,
-                params={
-                    "inp": output_folder + "/SPEAKER",
-                    "opt_root": output_folder + "/SPEAKER_PROCESSED",
-                    "threshold": -34,
-                    "min_length": 4000,
-                    "min_interval": 300,
-                    "hop_size": 10,
-                    "max_sil_kept": 500,
-                    "_max": 0.9,
-                    "alpha": 0.25,
-                    "n_parts": 4,
-                },
+                # Change 'data' to 'json' to send a JSON payload
+                params=returnData,
             )
             response.raise_for_status()
         except Exception as e:

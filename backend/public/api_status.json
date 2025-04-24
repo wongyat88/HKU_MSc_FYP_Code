@@ -1,8 +1,126 @@
 {
     "phase1": {
-        "is_complete": false,
-        "message": "Creating Dataset for SoVits... Preprocessing audio on ASR... SPEAKER_00",
-        "data": {}
+        "is_complete": true,
+        "message": "Processing complete",
+        "data": [
+            {
+                "id": 1,
+                "speaker": "SPEAKER_01",
+                "start_time": 0.03096875,
+                "end_time": 1.0265937500000002,
+                "duration": 0.9956250000000002,
+                "file_path": "SPEAKER\\SPEAKER_01_1.wav",
+                "text": "President elect."
+            },
+            {
+                "id": 2,
+                "speaker": "SPEAKER_00",
+                "start_time": 1.0265937500000002,
+                "end_time": 1.22909375,
+                "duration": 0.2024999999999999,
+                "file_path": "SPEAKER\\SPEAKER_00_2.wav",
+                "text": "\u3042\u306e\u3002"
+            },
+            {
+                "id": 3,
+                "speaker": "SPEAKER_01",
+                "start_time": 1.22909375,
+                "end_time": 3.3553437500000003,
+                "duration": 2.12625,
+                "file_path": "SPEAKER\\SPEAKER_01_3.wav",
+                "text": "Trump, welcome back to meet the press."
+            },
+            {
+                "id": 4,
+                "speaker": "SPEAKER_00",
+                "start_time": 3.3553437500000003,
+                "end_time": 4.48596875,
+                "duration": 1.1306249999999993,
+                "file_path": "SPEAKER\\SPEAKER_00_4.wav",
+                "text": "Thank you very much."
+            },
+            {
+                "id": 5,
+                "speaker": "SPEAKER_01",
+                "start_time": 4.77284375,
+                "end_time": 22.52534375,
+                "duration": 17.7525,
+                "file_path": "SPEAKER\\SPEAKER_01_5.wav",
+                "text": "Thank you so much for being here, you are the first president since grover cl to win non consecutive terms Republicanslicans now have control of the House and the Senatenate what do you plan to accomplish in your first 100 days in office?"
+            },
+            {
+                "id": 6,
+                "speaker": "SPEAKER_00",
+                "start_time": 13.429718750000003,
+                "end_time": 13.615343750000001,
+                "duration": 0.18562499999999815,
+                "file_path": "SPEAKER\\SPEAKER_00_6.wav",
+                "text": "\u3044\u3002\ud83e\udd22"
+            },
+            {
+                "id": 7,
+                "speaker": "SPEAKER_00",
+                "start_time": 18.47534375,
+                "end_time": 18.50909375,
+                "duration": 0.03375000000000128,
+                "file_path": "SPEAKER\\SPEAKER_00_7.wav",
+                "text": "[Transcription error]"
+            },
+            {
+                "id": 8,
+                "speaker": "SPEAKER_00",
+                "start_time": 22.64346875,
+                "end_time": 32.329718750000005,
+                "duration": 9.686250000000005,
+                "file_path": "SPEAKER\\SPEAKER_00_8.wav",
+                "text": "Well, we're going to do something with the border and very strong, very powerful, that'll be our first signal and our first signal to America that we're not playing games."
+            },
+            {
+                "id": 9,
+                "speaker": "SPEAKER_00",
+                "start_time": 32.650343750000005,
+                "end_time": 47.77034375,
+                "duration": 15.119999999999997,
+                "file_path": "SPEAKER\\SPEAKER_00_9.wav",
+                "text": "People coming in by the millions as you know and a lot of people shouldn't be here, most of them shouldn't be here, but we have jails being emptied into our country, we have mental institutions from all over the world being emptied into our country so we'll be doing that we're going to be."
+            },
+            {
+                "id": 10,
+                "speaker": "SPEAKER_00",
+                "start_time": 47.80409375,
+                "end_time": 49.98096875,
+                "duration": 2.1768750000000026,
+                "file_path": "SPEAKER\\SPEAKER_00_10.wav",
+                "text": "Extending within that period or."
+            },
+            {
+                "id": 11,
+                "speaker": "SPEAKER_00",
+                "start_time": 50.369093750000005,
+                "end_time": 53.001593750000005,
+                "duration": 2.6325000000000003,
+                "file_path": "SPEAKER\\SPEAKER_00_11.wav",
+                "text": "As soon as we can, the Trump tax cuts."
+            },
+            {
+                "id": 12,
+                "speaker": "SPEAKER_00",
+                "start_time": 53.507843750000006,
+                "end_time": 57.05159375,
+                "duration": 3.5437499999999957,
+                "file_path": "SPEAKER\\SPEAKER_00_12.wav",
+                "text": "Because you know they're coming due and they're very substantial for people."
+            },
+            {
+                "id": 13,
+                "speaker": "SPEAKER_00",
+                "start_time": 57.57471875,
+                "end_time": 65.60721875,
+                "duration": 8.032499999999999,
+                "file_path": "SPEAKER\\SPEAKER_00_13.wav",
+                "text": "It would be very, I think it will anger a lot of people, frankly, if we don't get an extension of that, that's what led us to one of the greatest economies ever."
+            }
+        ]
     },
     "phase2": {
         "is_complete": true,
@@ -14,22 +132,28 @@
         "message": "Training SoVits and GPT models completed successfully.",
         "data": {}
     },
+    "phase4": {
+        "is_complete": true,
+        "message": "Generation all completed successfully.",
+        "data": {}
+    },
     "combine": {
         "is_complete": true,
         "message": "Audio combination complete",
         "data": {
             "new_segment": {
-                "id": 15,
-                "speaker": "SPEAKER_00",
-                "start_time": 47.80409375,
-                "end_time": 53.001593750000005,
-                "duration": 4.809375000000003,
-                "file_path": "SPEAKER\\SPEAKER_00_15.wav",
-                "text": "Extending within that period or as soon as we can, the Trump tax cuts."
+                "id": 14,
+                "speaker": "SPEAKER_01",
+                "start_time": 0.03096875,
+                "end_time": 3.3553437500000003,
+                "duration": 3.3243750000000003,
+                "file_path": "SPEAKER\\SPEAKER_01_14.wav",
+                "text": "President elect donald trump, welcome back to meet the press."
             },
             "removed_segments": [
-                10,
-                11
+                1,
+                2,
+                3
             ]
         }
     }
