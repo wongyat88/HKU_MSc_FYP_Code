@@ -13,9 +13,11 @@ from fastapi.staticfiles import StaticFiles
 
 from app.translation_processing import process_translation
 from app.training_processing import process_training
-from app.generation_processing import process_generation
+from app.generation_processing import process_generation, process_respeed
 from app.utils.updateApiStatus import updateApiStatus
 import requests
+
+from app.utils.tools import recreate_folder
 
 from .audio_processing import (
     process_audio_combination,
@@ -399,7 +401,7 @@ async def generate(
     main_data_list = []
 
     selected_models = selectedModels["selectedModels"]
-    print("selected_models: ", selected_models)
+    # print("selected_models: ", selected_models)
 
     trans_json = get_translated_json()
     is_last_one = False
@@ -469,6 +471,7 @@ async def generate(
         }
 
         log_data = {
+            "tran_id": data["id"],
             "target_speaker": target_speaker,
             "gpt_model_path": selected_models[target_speaker]["gpt"],
             "sovits_model_path": selected_models[target_speaker]["sovits"],
@@ -489,19 +492,159 @@ async def generate(
         }
         main_data_list.append(log_data)
 
-        # process_generation(
-        #     selected_models[target_speaker]["gpt"],
-        #     selected_models[target_speaker]["sovits"],
-        #     real_ref_audio_path,
-        #     real_ref_audio_text,
-        #     MAPPING_INPUT_LANGUAGES[language_setting["input_language"]],
-        #     data["translated_text"],
-        #     MAPPING_OUTPUT_LANGUAGES[language_setting["output_language"]],
-        #     PHASE4_DIR + "\\" + data["file_path"],  # output path
-        #     ref_freeze,
-        #     API_STATUS_PATH,
-        #     PHASE4_DIR,
-        #     ref_need_to_trim,
-        #     is_last_one,
-        # )
-    process_generation(main_data_list)
+    # Clean the folder first
+    recreate_folder(PHASE4_DIR)
+
+    process_generation(main_data_list, PHASE3_DIR, PHASE4_DIR, False)
+
+    return {"message": "Generation processing started."}
+
+
+@app.get("/phase4/result")
+async def get_generation_result():
+    try:
+        final_json_path = os.path.join(PHASE4_DIR, "final_result.json")
+        if not os.path.exists(final_json_path):
+            return []
+
+        with open(final_json_path, "r", encoding="utf-8") as final_result_file:
+            final_result = json.load(final_result_file)
+            return final_result
+
+    except Exception as e:
+        logger.error(f"Error retrieving final result: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error retrieving final result: {str(e)}"
+        )
+
+
+"""
+{
+    "id": 14,
+    "speed": 1.7792818198909568,
+    "translated_text": "選舉總統唐納德·特朗普，歡迎再次見面新聞。"
+    "selectedModels" : {}
+}
+"""
+
+
+@app.post("/phase4/re-generate")
+async def re_generate(
+    data: dict = None,
+):
+    # Check if all data included
+    if data is None:
+        logger.error("Missing data for re-generate")
+        raise HTTPException(status_code=500, detail="Missing data for re-generate")
+
+    id = data["id"]
+    speed = data["speed"]
+    translated_text = data["translated_text"]
+    selected_models = data["selectedModels"]
+
+    # Check if the id is valid
+    # Get the final result json
+    final_json_path = os.path.join(PHASE4_DIR, "final_result.json")
+    if not os.path.exists(final_json_path):
+        logger.error("Final result json not found")
+        raise HTTPException(status_code=404, detail="Final result json not found")
+
+    with open(final_json_path, "r", encoding="utf-8") as final_result_file:
+        final_result = json.load(final_result_file)
+
+        for data in final_result:
+            if data["id"] == id:
+
+                # Check if text update or update update
+
+                if translated_text != data["translated_text"]:
+
+                    real_ref_audio_path = ""
+                    real_ref_audio_text = ""
+
+                    # * Ref Audio need to be 3 to 10 seconds long
+                    # * If the ref audio is too long, trim to 9 seconds and save it as temp_xxx.wav and do asr on it for ref_text
+                    # * If the ref audio is too short, get `target_speaker` and random select a ref audio from the same speaker that is more than 3 seconds long
+
+                    get_random_ref_audio = False
+                    ref_need_to_trim = False
+
+                    # Search the ref audio in json from phase1 directory
+                    ref_audio_path = data["file_path"]
+                    target_speaker = data["speaker"]
+
+                    if data["duration"] >= 3:
+                        real_ref_audio_path = PHASE1_DIR + "\\" + ref_audio_path
+                        real_ref_audio_text = data["text"]
+                        if data["duration"] >= 10:
+                            ref_need_to_trim = True
+                    else:
+                        get_random_ref_audio = True
+
+                    # if real_ref_audio_path is "" and real_ref_audio_text is "", mean not found the ref
+                    if real_ref_audio_path == "" and real_ref_audio_text == "":
+                        get_random_ref_audio = True
+
+                    if get_random_ref_audio is True:
+                        for i in final_result:
+                            if i["speaker"] == target_speaker and (i["duration"] >= 3):
+                                real_ref_audio_path = PHASE1_DIR + "\\" + i["file_path"]
+                                real_ref_audio_text = i["text"]
+
+                                if i["duration"] >= 10:
+                                    ref_need_to_trim = True
+                                break
+
+                    # Read the language json from input directory
+                    get_language_setting_path = INPUT_DIR + "/language.json"
+                    with open(get_language_setting_path, "r") as f:
+                        language_setting = json.load(f)
+
+                    # ref language "中文", "英文", "日文"
+                    MAPPING_INPUT_LANGUAGES = {
+                        "Cantonese": "粤语",
+                        "Mandarin": "中文",
+                        "English": "英文",
+                        "Japanese": "日文",
+                        "Korean": "韩文",
+                    }
+
+                    # Output language ["中文", "英文", "日文", "粤语", "中英混合", "日英混合", "多语种混合"]
+                    MAPPING_OUTPUT_LANGUAGES = {
+                        "Cantonese": "粤英混合",
+                        "Mandarin": "中文",
+                        "English": "英文",
+                        "Japanese": "日文",
+                        "Korean": "韩文",
+                    }
+
+                    log_data = {
+                        "tran_id": data["id"],
+                        "target_speaker": target_speaker,
+                        "gpt_model_path": selected_models[target_speaker]["gpt"],
+                        "sovits_model_path": selected_models[target_speaker]["sovits"],
+                        "ref_audio_path": real_ref_audio_path,
+                        "ref_text_path": real_ref_audio_text,
+                        "ref_language": MAPPING_INPUT_LANGUAGES[
+                            language_setting["input_language"]
+                        ],
+                        "target_text_path": translated_text,
+                        "target_language": MAPPING_OUTPUT_LANGUAGES[
+                            language_setting["output_language"]
+                        ],
+                        "output_path": PHASE4_DIR + "\\SPEAKER\\",
+                        "output_file_name": data["file_path"].replace("SPEAKER\\", ""),
+                        "ref_free": False,
+                        "api_status_path": API_STATUS_PATH,
+                        "phase4_dir": PHASE4_DIR,
+                        "ref_need_to_trim": ref_need_to_trim,
+                        "is_last_one": True,
+                    }
+
+                    # Update the speed and id
+                    process_generation([log_data], PHASE3_DIR, PHASE4_DIR, True)
+                else:
+                    process_respeed(id, speed, PHASE4_DIR, API_STATUS_PATH)
+                break
+
+    return {"message": "Re-generation processing started."}

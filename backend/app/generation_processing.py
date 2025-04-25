@@ -1,7 +1,12 @@
 import json
 import os
+from pathlib import Path
+import shutil
 import threading
+import traceback
 from decouple import config
+import librosa
+import soundfile as sf
 from pydub import AudioSegment
 import requests
 
@@ -28,26 +33,31 @@ def update_status(api_status_path, phase, is_complete, message, data=None):
         json.dump(status, status_file, indent=4)
 
 
-"""
-{
-        "gpt_model_path": "F:\\School\\FYP2\\GPT-SoVITS-v3lora-20250228\\GPT_weights_v3\\SPEAKER_00-e15.ckpt",
-        "sovits_model_path": "F:\\School\\FYP2\\GPT-SoVITS-v3lora-20250228\\SoVITS_weights_v3\\SPEAKER_00_e8_s64_l32.pth",
-        "ref_audio_path": "F:\\School\\FYP2\\backend_frontend_ui\\backend\\public\\phase1\\SPEAKER\\SPEAKER_00_8.wav",
-        "ref_text_path": "Well, we're going to do something with the border and very strong, very powerful, that'll be our first signal and our first signal to America that we're not playing games.",
-        "ref_language": "英文",
-        "target_text_path": "唔刻曬, 英文, 粤语",  # Ensure file is saved as UTF-8 for these characters
-        "target_language": "粤语",  # Ensure file is saved as UTF-8 for these characters
-        "output_path": "F:\\School\\FYP2",
-        "ref_freeze": False,
-    }
-"""
-
-
-def process_generation(data):
+def process_generation(data, phase3_dir, phase4_dir, single_update):
     # Start a thread to process the video asynchronously
     thread = threading.Thread(
         target=_process_generation_thread,
-        args=(data,),
+        args=(
+            data,
+            phase3_dir,
+            phase4_dir,
+            single_update,
+        ),
+    )
+    thread.daemon = True
+    thread.start()
+
+
+def process_respeed(id, speed, phase4_dir, API_STATUS_PATH):
+    # Start a thread to process the video asynchronously
+    thread = threading.Thread(
+        target=_process_respeed_thread,
+        args=(
+            id,
+            speed,
+            phase4_dir,
+            API_STATUS_PATH,
+        ),
     )
     thread.daemon = True
     thread.start()
@@ -77,12 +87,99 @@ def trim_audio(input_path, output_path, duration):
     trimmed_audio.export(output_path, format="wav")
 
 
-def _process_generation_thread(data):
+def search_dict_and_add_update(data, tran_id, key, value):
+    for item in data:
+        if item["id"] == tran_id:
+            item[key] = value
+            break
+
+    return data
+
+
+def get_audio_length(audio_path):
+    audio = AudioSegment.from_file(audio_path)
+    return len(audio) / 1000  # Convert milliseconds to seconds
+
+
+def calculate_speed_ratio(old_duration, new_duration):
+    if new_duration == 0:
+        raise ValueError("New duration cannot be zero. (calculate_speed_ratio)")
+
+    speed_ratio = new_duration / old_duration
+    return speed_ratio
+
+
+def change_audio_speed(audio_path: str, speed_ratio: float):
+    # """
+    # Change the speed of an audio file while maintaining pitch and overwrite the original file.
+
+    # Args:
+    #     audio_path (str): Path to the input audio file (will be overwritten).
+    #     speed_ratio (float): Speed ratio to apply (>1 speeds up, <1 slows down).
+
+    # Returns:
+    #     str: Path to the overwritten file (same as input).
+
+    # Raises:
+    #     ValueError: If speed_ratio is not positive.
+    #     FileNotFoundError: If input file doesn't exist.
+    # """
+    # if speed_ratio <= 0:
+    #     raise ValueError("Speed ratio must be a positive number.")
+
+    # if not os.path.exists(audio_path):
+    #     raise FileNotFoundError(f"Audio file not found: {audio_path}")
+
+    # # Load audio file
+    # audio = AudioSegment.from_file(audio_path)
+
+    # # Change speed by altering frame rate
+    # new_sample_rate = int(audio.frame_rate * speed_ratio)
+    # sped_up_audio = audio._spawn(
+    #     audio.raw_data, overrides={"frame_rate": new_sample_rate}
+    # )
+
+    # # Set the correct sample rate for the output
+    # final_audio = sped_up_audio.set_frame_rate(audio.frame_rate)
+
+    # # Get file format from extension
+    # file_format = os.path.splitext(audio_path)[1][1:]
+
+    # # Export and overwrite the original file
+    # final_audio.export(audio_path, format=file_format)
+
+    # return audio_path
+
+    if speed_ratio <= 0:
+        raise ValueError("Speed ratio must be positive.")
+
+    if not os.path.exists(audio_path):
+        raise FileNotFoundError(f"Audio file not found: {audio_path}")
+
+    # Load audio file
+    y, sr = librosa.load(audio_path, sr=None)  # sr=None preserves original sample rate
+
+    # Time-stretch without changing pitch
+    y_stretched = librosa.effects.time_stretch(y, rate=speed_ratio)
+
+    # Overwrite the original file
+    sf.write(audio_path, y_stretched, sr)
+
+    return audio_path
+
+
+def _process_generation_thread(data, phase3_dir, phase4_dir, single_update):
     """
     Process the generation of translations.
     """
 
+    # Read the translated_data.json file
+    transcriptions_path = os.path.join(phase3_dir, "translated_data.json")
+    with open(transcriptions_path, "r", encoding="utf-8") as translated_data:
+        final_out_json = json.load(translated_data)
+
     for i in data:
+        tran_id = i["tran_id"]
         target_speaker = i["target_speaker"]
         gpt_model_path = i["gpt_model_path"]
         sovits_model_path = i["sovits_model_path"]
@@ -106,7 +203,7 @@ def _process_generation_thread(data):
             update_status(
                 api_status_path,
                 "phase4",
-                True,
+                False,
                 f"Trimming Audio for ref on {target_text_path} ...",
             )
 
@@ -145,7 +242,7 @@ def _process_generation_thread(data):
         update_status(
             api_status_path,
             "phase4",
-            True,
+            False,
             f"Generating audio on {target_text_path} ...",
         )
 
@@ -169,6 +266,37 @@ def _process_generation_thread(data):
             response = requests.post(server_url, json=returnData)
             response.raise_for_status()
 
+            # Read the audio length and add final_out_json
+            new_audio_path = os.path.join(output_path, output_file_name)
+
+            # duplicate the file with adding '_copy' to the name
+            dir_path = os.path.dirname(new_audio_path)
+            duplicate_audio_name = f"{output_file_name.split('.')[0]}_copy.wav"
+            dst_path = os.path.join(dir_path, duplicate_audio_name)
+            shutil.copy(new_audio_path, dst_path)
+
+            audio_length = get_audio_length(new_audio_path)
+            final_out_json = search_dict_and_add_update(
+                final_out_json, tran_id, "translated_text", target_text_path
+            )
+            final_out_json = search_dict_and_add_update(
+                final_out_json, tran_id, "generated_audio_duration", audio_length
+            )
+
+            # Get the original audio length and calculate the speed ratio
+            for item in final_out_json:
+                if item["id"] == tran_id:
+                    # Must Exist, if not, it will cuz error
+                    original_audio_duration = item["duration"]
+
+            speed_ratio = calculate_speed_ratio(original_audio_duration, audio_length)
+            final_out_json = search_dict_and_add_update(
+                final_out_json, tran_id, "generated_audio_speed", speed_ratio
+            )
+
+            # Update the audio speed
+            change_audio_speed(new_audio_path, speed_ratio)
+
             if is_last_one is True:
                 update_status(
                     api_status_path,
@@ -185,7 +313,7 @@ def _process_generation_thread(data):
                 )
 
         except Exception as e:
-            print(f"Error: {e}")
+            traceback.print_exc()
             update_status(
                 api_status_path,
                 "phase4",
@@ -194,4 +322,84 @@ def _process_generation_thread(data):
             )
             return
 
+    # Save the updated final_out_json to the file
+    if single_update is True:
+        # Get original final result json as single update must be happen after generated
+        original_json_path = os.path.join(phase4_dir, "final_result.json")
+        with open(original_json_path, "r", encoding="utf-8") as original_json:
+            original_json = json.load(original_json)
+            for item in original_json:
+                for i in final_out_json:
+                    if item["id"] == i["id"]:
+                        item["generated_audio_duration"] = i["generated_audio_duration"]
+                        item["generated_audio_speed"] = i["generated_audio_speed"]
+                        item["translated_text"] = i["translated_text"]
+                        break
+            final_out_json = original_json
+
+    output_json_dir = os.path.join(phase4_dir, "final_result.json")
+    with open(output_json_dir, "w", encoding="utf-8") as final_output:
+        json.dump(final_out_json, final_output, ensure_ascii=False, indent=4)
+
     return {"output_dir": output_path}
+
+
+def _process_respeed_thread(id, speed, phase4_dir, api_status_path):
+    """
+    Process the generation of translations.
+    """
+    update_status(
+        api_status_path,
+        "phase4",
+        False,
+        f"Changing speed ...",
+    )
+
+    # Read the translated_data.json file
+    result_dir = os.path.join(phase4_dir, "final_result.json")
+    with open(result_dir, "r", encoding="utf-8") as translated_data:
+        final_out_json = json.load(translated_data)
+
+    tran_id = id
+    speed_ratio = speed
+
+    for i in final_out_json:
+        if i["id"] == tran_id:
+            # Must Exist, if not, it will cause error
+            i["generated_audio_speed"] = speed_ratio
+
+            # Construct full paths
+            original_relative_path = i["file_path"]  # "SPEAKER\SPEAKER_01_14.wav"
+            original_path = Path(phase4_dir) / original_relative_path
+
+            # Get copy path (replace ".wav" with "_copy.wav")
+            copy_path = original_path.with_name(original_path.stem + "_copy.wav")
+
+            # Verify paths
+            if not copy_path.exists():
+                raise FileNotFoundError(f"Copy file not found: {copy_path}")
+            if not original_path.parent.exists():
+                raise FileNotFoundError(
+                    f"SPEAKER directory not found: {original_path.parent}"
+                )
+
+            # Overwrite original with copy
+            shutil.copy2(copy_path, original_path)
+
+            # Apply speed change
+            change_audio_speed(str(original_path), speed_ratio)
+            break
+
+    # Save the updated final_out_json to the file
+    output_json_dir = os.path.join(phase4_dir, "final_result.json")
+    with open(output_json_dir, "w", encoding="utf-8") as final_output:
+        json.dump(final_out_json, final_output, ensure_ascii=False, indent=4)
+
+    update_status(
+        api_status_path,
+        "phase4",
+        True,
+        f"Changing speed completed",
+    )
+
+    return {"output_dir": "phase4_dir"}
