@@ -1,0 +1,51 @@
+python -m venv venv
+
+venv\Script\activate
+
+
+# Change the path to your venv location
+F:\School\FYP2\backend_frontend_ui\face_detection\venv\Scripts\python.exe -m pip install -r requriements.txt
+
+pip install facenet-pytorch
+
+pip uninstall torch torchvision torchaudio
+
+
+# Please update to your CUDA version. Torch should be fix on 2.6.0
+pip install torch==2.6.0 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+
+Update the backend .env with this folder root path
+For example: 'F:\School\FYP2\backend_frontend_ui\face_detection'
+
+You may see some error saying the verison is not support for torchvision vs the facenet-pytorch, no need to care it. The program can still run.
+```
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+facenet-pytorch 2.6.0 requires torch<2.3.0,>=2.2.0, but you have torch 2.6.0+cu118 which is incompatible.
+facenet-pytorch 2.6.0 requires torchvision<0.18.0,>=0.17.0, but you have torchvision 0.21.0+cu118 which is incompatible.
+```
+
+test is it running on GPUs
+
+python test_gpu.py
+
+```
+Installing collected packages: torch, torchvision, torchaudio
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+facenet-pytorch 2.6.0 requires torch<2.3.0,>=2.2.0, but you have torch 2.6.0+cu118 which is incompatible.
+facenet-pytorch 2.6.0 requires torchvision<0.18.0,>=0.17.0, but you have torchvision 0.21.0+cu118 which is incompatible.
+Successfully installed torch-2.6.0+cu118 torchaudio-2.6.0+cu118 torchvision-0.21.0+cu118
+
+[notice] A new release of pip is available: 25.0 -> 25.1
+[notice] To update, run: python.exe -m pip install --upgrade pip
+
+(venv) F:\School\FYP2\backend_frontend_ui\face_detection>python test_gpu.py
+GPU is available - Found 1 device(s)
+Device 0: NVIDIA GeForce RTX 4070 Ti
+Current device: 0
+PyTorch CUDA version: 11.8
+```
+
+Testing
+```
+python detect_v2.py --vid_input_path "F:\School\FYP\face_detection\input.mp4" --json_output_path "F:\School\FYP\face_detection\output.json" --yolo_batch_size 256 --n_speakers 2
+```

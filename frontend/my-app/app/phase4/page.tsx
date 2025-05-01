@@ -5,10 +5,12 @@ import React, { useEffect, useState } from 'react'
 import { Status } from '../page'
 import { baseUrl } from '@/utils/useFetch'
 import AudioDisplay from '@/components/AudioDisplay'
+import { useRouter } from 'next/navigation'
 
 type Props = {}
 
 const Page = (props: Props) => {
+    const router = useRouter()
     const original_audio_base_url = `${baseUrl}/public/phase1/`
     const generated_audio_base_url = `${baseUrl}/public/phase4/`
 
@@ -135,6 +137,10 @@ const Page = (props: Props) => {
         }
     }
 
+    const handleToPhase5 = () => {
+        router.push('/phase5')
+    }
+
     if (!modeList) return <div className="p-4 dark:text-white">Loading model list...</div>
 
     return (
@@ -211,6 +217,16 @@ const Page = (props: Props) => {
                                 : 'bg-green-500 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-800'
                         }`}>
                         {loading ? 'Generating...' : 'Generate Audio'}
+                    </button>
+                    <button
+                        onClick={handleToPhase5}
+                        disabled={loading}
+                        className={`rounded px-4 py-2 font-bold text-white ${
+                            loading
+                                ? 'cursor-not-allowed bg-gray-500'
+                                : 'bg-blue-500 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-800'
+                        }`}>
+                        {loading ? 'Generating...' : 'Continue to Phase 5'}
                     </button>
                 </div>
                 {uploadStatus && (

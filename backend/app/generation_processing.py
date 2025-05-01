@@ -7,6 +7,7 @@ import traceback
 from decouple import config
 import librosa
 import soundfile as sf
+import pyrubberband as pyrb
 from pydub import AudioSegment
 import requests
 
@@ -110,61 +111,20 @@ def calculate_speed_ratio(old_duration, new_duration):
 
 
 def change_audio_speed(audio_path: str, speed_ratio: float):
-    # """
-    # Change the speed of an audio file while maintaining pitch and overwrite the original file.
-
-    # Args:
-    #     audio_path (str): Path to the input audio file (will be overwritten).
-    #     speed_ratio (float): Speed ratio to apply (>1 speeds up, <1 slows down).
-
-    # Returns:
-    #     str: Path to the overwritten file (same as input).
-
-    # Raises:
-    #     ValueError: If speed_ratio is not positive.
-    #     FileNotFoundError: If input file doesn't exist.
-    # """
-    # if speed_ratio <= 0:
-    #     raise ValueError("Speed ratio must be a positive number.")
-
-    # if not os.path.exists(audio_path):
-    #     raise FileNotFoundError(f"Audio file not found: {audio_path}")
-
-    # # Load audio file
-    # audio = AudioSegment.from_file(audio_path)
-
-    # # Change speed by altering frame rate
-    # new_sample_rate = int(audio.frame_rate * speed_ratio)
-    # sped_up_audio = audio._spawn(
-    #     audio.raw_data, overrides={"frame_rate": new_sample_rate}
-    # )
-
-    # # Set the correct sample rate for the output
-    # final_audio = sped_up_audio.set_frame_rate(audio.frame_rate)
-
-    # # Get file format from extension
-    # file_format = os.path.splitext(audio_path)[1][1:]
-
-    # # Export and overwrite the original file
-    # final_audio.export(audio_path, format=file_format)
-
-    # return audio_path
-
+    # * Remind that u need to install rubberband cli in your system, and add it to the PATH (Windows)
     if speed_ratio <= 0:
         raise ValueError("Speed ratio must be positive.")
-
     if not os.path.exists(audio_path):
         raise FileNotFoundError(f"Audio file not found: {audio_path}")
 
-    # Load audio file
-    y, sr = librosa.load(audio_path, sr=None)  # sr=None preserves original sample rate
+    # Load audio
+    y, sr = librosa.load(audio_path, sr=None)
 
-    # Time-stretch without changing pitch
-    y_stretched = librosa.effects.time_stretch(y, rate=speed_ratio)
+    # Rubber Band time-stretch (keeps pitch constant)
+    y_st = pyrb.time_stretch(y, sr, speed_ratio)
 
-    # Overwrite the original file
-    sf.write(audio_path, y_stretched, sr)
-
+    # Write out
+    sf.write(audio_path, y_st, sr)
     return audio_path
 
 
@@ -174,7 +134,11 @@ def _process_generation_thread(data, phase3_dir, phase4_dir, single_update):
     """
 
     # Read the translated_data.json file
-    transcriptions_path = os.path.join(phase3_dir, "translated_data.json")
+    file_name = (
+        "translated_data.json" if single_update is False else "final_result.json"
+    )
+    file_path = phase3_dir if single_update is False else phase4_dir
+    transcriptions_path = os.path.join(file_path, file_name)
     with open(transcriptions_path, "r", encoding="utf-8") as translated_data:
         final_out_json = json.load(translated_data)
 
@@ -323,19 +287,22 @@ def _process_generation_thread(data, phase3_dir, phase4_dir, single_update):
             return
 
     # Save the updated final_out_json to the file
-    if single_update is True:
-        # Get original final result json as single update must be happen after generated
-        original_json_path = os.path.join(phase4_dir, "final_result.json")
-        with open(original_json_path, "r", encoding="utf-8") as original_json:
-            original_json = json.load(original_json)
-            for item in original_json:
-                for i in final_out_json:
-                    if item["id"] == i["id"]:
-                        item["generated_audio_duration"] = i["generated_audio_duration"]
-                        item["generated_audio_speed"] = i["generated_audio_speed"]
-                        item["translated_text"] = i["translated_text"]
-                        break
-            final_out_json = original_json
+    # if single_update is True:
+    #     print("Single update is true, so we will update the original json.")
+    #     print(">>> final_out_json: ", final_out_json)
+    #     # Get original final result json as single update must be happen after generated
+    #     original_json_path = os.path.join(phase4_dir, "final_result.json")
+    #     with open(original_json_path, "r", encoding="utf-8") as original_json:
+    #         original_json = json.load(original_json)
+    #         for item in original_json:
+    #             for i in final_out_json:
+    #                 if item["id"] == i["id"]:
+    #                     print(">>> INSIDE the Loop: ", i)
+    #                     item["generated_audio_duration"] = i["generated_audio_duration"]
+    #                     item["generated_audio_speed"] = i["generated_audio_speed"]
+    #                     item["translated_text"] = i["translated_text"]
+    #                     break
+    #         final_out_json = original_json
 
     output_json_dir = os.path.join(phase4_dir, "final_result.json")
     with open(output_json_dir, "w", encoding="utf-8") as final_output:

@@ -14,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from app.translation_processing import process_translation
 from app.training_processing import process_training
 from app.generation_processing import process_generation, process_respeed
+from app.final_video_generate_processing import process_face_detection
 from app.utils.updateApiStatus import updateApiStatus
 import requests
 
@@ -54,6 +55,7 @@ PHASE1_DIR = os.path.join(WORK_DIR, "phase1")
 PHASE2_DIR = os.path.join(WORK_DIR, "phase2")
 PHASE3_DIR = os.path.join(WORK_DIR, "phase3")
 PHASE4_DIR = os.path.join(WORK_DIR, "phase4")
+PHASE5_DIR = os.path.join(WORK_DIR, "phase5")
 API_STATUS_PATH = os.path.join(WORK_DIR, "api_status.json")
 
 # Mount the public directory for static files
@@ -552,12 +554,12 @@ async def re_generate(
     with open(final_json_path, "r", encoding="utf-8") as final_result_file:
         final_result = json.load(final_result_file)
 
-        for data in final_result:
-            if data["id"] == id:
+        for q in final_result:
+            if q["id"] == id:
 
                 # Check if text update or update update
 
-                if translated_text != data["translated_text"]:
+                if translated_text != q["translated_text"]:
 
                     real_ref_audio_path = ""
                     real_ref_audio_text = ""
@@ -570,13 +572,13 @@ async def re_generate(
                     ref_need_to_trim = False
 
                     # Search the ref audio in json from phase1 directory
-                    ref_audio_path = data["file_path"]
-                    target_speaker = data["speaker"]
+                    ref_audio_path = q["file_path"]
+                    target_speaker = q["speaker"]
 
-                    if data["duration"] >= 3:
+                    if q["duration"] >= 3:
                         real_ref_audio_path = PHASE1_DIR + "\\" + ref_audio_path
-                        real_ref_audio_text = data["text"]
-                        if data["duration"] >= 10:
+                        real_ref_audio_text = q["text"]
+                        if q["duration"] >= 10:
                             ref_need_to_trim = True
                     else:
                         get_random_ref_audio = True
@@ -619,7 +621,7 @@ async def re_generate(
                     }
 
                     log_data = {
-                        "tran_id": data["id"],
+                        "tran_id": q["id"],
                         "target_speaker": target_speaker,
                         "gpt_model_path": selected_models[target_speaker]["gpt"],
                         "sovits_model_path": selected_models[target_speaker]["sovits"],
@@ -633,13 +635,15 @@ async def re_generate(
                             language_setting["output_language"]
                         ],
                         "output_path": PHASE4_DIR + "\\SPEAKER\\",
-                        "output_file_name": data["file_path"].replace("SPEAKER\\", ""),
+                        "output_file_name": q["file_path"].replace("SPEAKER\\", ""),
                         "ref_free": False,
                         "api_status_path": API_STATUS_PATH,
                         "phase4_dir": PHASE4_DIR,
                         "ref_need_to_trim": ref_need_to_trim,
                         "is_last_one": True,
                     }
+
+                    print(">>> Before generate", log_data)
 
                     # Update the speed and id
                     process_generation([log_data], PHASE3_DIR, PHASE4_DIR, True)
@@ -648,3 +652,102 @@ async def re_generate(
                 break
 
     return {"message": "Re-generation processing started."}
+
+
+@app.get("/phase5/start_face_detection")
+async def start_detection_result():
+    try:
+        # Check if 'images' folder exists in phase5 directory
+        phase5_images_dir = os.path.join(PHASE5_DIR, "images")
+        if os.path.exists(phase5_images_dir):
+            return JSONResponse(
+                status_code=200, content={"message": "Face detection already started."}
+            )
+
+        process_face_detection(
+            API_STATUS_PATH,
+            INPUT_DIR,
+            PHASE1_DIR,
+            PHASE5_DIR,
+        )
+
+        return {"message": "Face detection processing started."}
+
+    except Exception as e:
+        logger.error(f"Error retrieving final result: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error retrieving final result: {str(e)}"
+        )
+
+
+@app.get("/phase5/get_face_detection")
+async def get_detection_result():
+    try:
+        # Open the phase5 directory and the folder of 'images'
+        phase5_dir = os.path.join(PHASE5_DIR, "images")
+        if not os.path.exists(phase5_dir):
+            return JSONResponse(
+                status_code=404, content={"error": "Face detection result not found"}
+            )
+
+        # Get the list of all files in the directory
+        file_list = os.listdir(phase5_dir)
+
+        # loop the files and split by '_' and group by the first part, return a json with the file name and the group name
+        grouped_files = {}
+        for file in file_list:
+            group_name = file.split("_")[0]
+            if group_name not in grouped_files:
+                grouped_files[group_name] = []
+            grouped_files[group_name].append(file)
+
+        # Get the speaker list from the phase1 directory
+        speaker_list_path = os.path.join(PHASE1_DIR, "speaker_list.json")
+        if not os.path.exists(speaker_list_path):
+            return JSONResponse(
+                status_code=404, content={"error": "Speaker list not found"}
+            )
+
+        with open(speaker_list_path, "r") as f:
+            speaker_names = json.load(f)
+            # Convert speaker names list to list of dictionaries
+            speaker_list = [{"name": name} for name in speaker_names]
+
+        # random get an audio that is more than 3 seconds long for each speaker from the phase 4 /final result json
+        final_result_path = os.path.join(PHASE4_DIR, "final_result.json")
+        if not os.path.exists(final_result_path):
+            return JSONResponse(
+                status_code=404, content={"error": "Final result json not found"}
+            )
+
+        with open(final_result_path, "r", encoding="utf-8") as final_result_file:
+            final_result = json.load(final_result_file)
+            speaker_audio = {}
+
+            # Get the audio path for each speaker
+            for speaker_info in speaker_list:
+                speaker_name = speaker_info["name"]
+                found_audio = False
+                for q in final_result:
+                    if q["speaker"] == speaker_name and (q["duration"] >= 3):
+                        speaker_audio[speaker_name] = q["file_path"]
+                        found_audio = True
+                        break
+                # If no suitable audio >= 3s found, assign the first one found for that speaker
+                if not found_audio:
+                    for q in final_result:
+                        if q["speaker"] == speaker_name:
+                            speaker_audio[speaker_name] = q["file_path"]
+                            break
+
+        return {
+            "image_group": grouped_files,
+            "speakers": speaker_list,
+            "speaker_audio": speaker_audio,
+        }
+
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=500, detail=f"Error retrieving final result: {str(e)}"
+        )

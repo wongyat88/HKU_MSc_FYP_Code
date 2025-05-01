@@ -134,7 +134,12 @@
     },
     "phase4": {
         "is_complete": true,
-        "message": "Changing speed completed",
+        "message": "Generation all completed successfully.",
+        "data": {}
+    },
+    "phase5": {
+        "is_complete": true,
+        "message": "Face detection completed successfully.",
         "data": {}
     },
     "combine": {
@@ -142,18 +147,17 @@
         "message": "Audio combination complete",
         "data": {
             "new_segment": {
-                "id": 14,
-                "speaker": "SPEAKER_01",
-                "start_time": 0.03096875,
-                "end_time": 3.3553437500000003,
-                "duration": 3.3243750000000003,
-                "file_path": "SPEAKER\\SPEAKER_01_14.wav",
-                "text": "President elect donald trump, welcome back to meet the press."
+                "id": 15,
+                "speaker": "SPEAKER_00",
+                "start_time": 47.80409375,
+                "end_time": 53.001593750000005,
+                "duration": 4.809375000000003,
+                "file_path": "SPEAKER\\SPEAKER_00_15.wav",
+                "text": "Extending within that period or as soon as we can, the Trump tax cuts."
             },
             "removed_segments": [
-                1,
-                2,
-                3
+                10,
+                11
             ]
         }
     }
