@@ -327,32 +327,56 @@ def predict(faces_crop, n_speakers):
     #     plt.show()
 
 
+import json
+from collections import Counter
+
+
 def output_as_json(faces_frame_coord_pred, prediction, json_output, n_speakers):
+    # how much bigger the box should be, total (e.g. 0.2 ⇒ +20%)
+    total_padding = 0.2
+
     # faces_frame_coord_pred: [frame_number, [x1, y1, x2, y2]]
     # prediction: [class]
     c = Counter(prediction).most_common(n_speakers)
     target_prediction = [i[0] for i in c]
+
     output = []
-    frame_list = list(set([i[0] for i in faces_frame_coord_pred]))
+    frame_list = list({i[0] for i in faces_frame_coord_pred})
     for frame_num in frame_list:
         frame_info = {"frame_number": str(frame_num), "faces": []}
-        for idx in range(0, len(faces_frame_coord_pred)):
-            if faces_frame_coord_pred[idx][0] == frame_num:
-                # Only record the most commonly seen faces
-                # if prediction[idx] in target_prediction:
-                frame_info["faces"].append(
-                    {
-                        "prediction": str(prediction[idx]),
-                        "coordinates": {
-                            "x1": str(faces_frame_coord_pred[idx][1][0]),
-                            "y1": str(faces_frame_coord_pred[idx][1][1]),
-                            "x2": str(faces_frame_coord_pred[idx][1][2]),
-                            "y2": str(faces_frame_coord_pred[idx][1][3]),
-                        },
-                    }
-                )
-        if len(frame_info["faces"]) > 0:
+        for idx, (fnum, coords) in enumerate(faces_frame_coord_pred):
+            if fnum != frame_num:
+                continue
+
+            x1, y1, x2, y2 = coords
+            w = x2 - x1
+            h = y2 - y1
+
+            # half of total_padding per side
+            pad_w = int(w * (total_padding / 2))
+            pad_h = int(h * (total_padding / 2))
+
+            # apply padding
+            x1p = x1 - pad_w
+            y1p = y1 - pad_h
+            x2p = x2 + pad_w
+            y2p = y2 + pad_h
+
+            frame_info["faces"].append(
+                {
+                    "prediction": str(prediction[idx]),
+                    "coordinates": {
+                        "x1": str(x1p),
+                        "y1": str(y1p),
+                        "x2": str(x2p),
+                        "y2": str(y2p),
+                    },
+                }
+            )
+
+        if frame_info["faces"]:
             output.append(frame_info)
+
     with open(json_output, "w") as f:
         json.dump(output, f, indent=4)
     print(f"JSON stored at {json_output} successfully")
@@ -452,13 +476,13 @@ def main(
         output_dir,
     )
 
-    # Clean up temporary frame folder
-    if os.path.exists(frame_store_path):
-        try:
-            shutil.rmtree(frame_store_path)
-            print(f"Cleaned up temporary frame folder: {frame_store_path}")
-        except OSError as e:
-            print(f"Error removing temporary folder {frame_store_path}: {e}")
+    # ! Do not clean up temporary frame folder, as it will used for masking video
+    # if os.path.exists(frame_store_path):
+    #     try:
+    #         shutil.rmtree(frame_store_path)
+    #         print(f"Cleaned up temporary frame folder: {frame_store_path}")
+    #     except OSError as e:
+    #         print(f"Error removing temporary folder {frame_store_path}: {e}")
 
 
 if __name__ == "__main__":

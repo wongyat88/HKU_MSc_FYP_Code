@@ -14,7 +14,10 @@ from fastapi.staticfiles import StaticFiles
 from app.translation_processing import process_translation
 from app.training_processing import process_training
 from app.generation_processing import process_generation, process_respeed
-from app.final_video_generate_processing import process_face_detection
+from app.final_video_generate_processing import (
+    process_face_detection,
+    process_final_generation,
+)
 from app.utils.updateApiStatus import updateApiStatus
 import requests
 
@@ -750,4 +753,26 @@ async def get_detection_result():
         traceback.print_exc()
         raise HTTPException(
             status_code=500, detail=f"Error retrieving final result: {str(e)}"
+        )
+
+
+@app.post("/phase5/generate_final_video")
+async def mask_video(data: dict = Body(...)):
+    try:
+        if data is None:
+            logger.error("No mask data provided")
+            raise HTTPException(status_code=400, detail="No mask data provided")
+
+        # Process saving the segments (this function should be implemented in your audio_processing module)
+        process_final_generation(
+            API_STATUS_PATH, INPUT_DIR, PHASE1_DIR, PHASE4_DIR, PHASE5_DIR, data["data"]
+        )
+
+        return {"message": "Final Video generating process started."}
+
+    except Exception as e:
+        traceback.print_exc()
+        logger.error(f"Error saving audio segments: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error saving audio segments: {str(e)}"
         )

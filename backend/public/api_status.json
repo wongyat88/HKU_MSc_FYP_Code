@@ -142,6 +142,11 @@
         "message": "Face detection completed successfully.",
         "data": {}
     },
+    "phase6": {
+        "is_complete": false,
+        "message": "Start Merging processed masked video ...",
+        "data": {}
+    },
     "combine": {
         "is_complete": true,
         "message": "Audio combination complete",

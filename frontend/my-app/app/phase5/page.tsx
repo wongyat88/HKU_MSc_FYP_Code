@@ -85,7 +85,60 @@ const page = (props: Props) => {
         getData()
         // Cleanup interval on component unmount
         // return () => clearInterval(interval); // This line causes issues because interval is defined inside the async function scope. Need refactoring if cleanup is strictly needed.
-    }, []) // Removed fetchData from dependencies as it's stable from useFetch hook
+    }, [])
+
+    const handleContinue = async () => {
+        // Handle continue button click
+        const selectedSpeakers = Object.fromEntries(
+            Object.entries(imageGroup).map(([groupKey, images]) => {
+                const selectEl = document.getElementById(
+                    `speaker-select-${groupKey}`
+                ) as HTMLSelectElement
+                return [selectEl.value, parseInt(groupKey, 10)] as [string, number]
+            })
+        )
+
+        console.log('Selected Speakers:', selectedSpeakers)
+
+        setLoading(true)
+        const response = await fetchData<any>('/phase5/generate_final_video', {
+            method: 'POST',
+            body: JSON.stringify({ data: selectedSpeakers }),
+        })
+
+        if (response) {
+            setUploadStatus({
+                mode: 300,
+                message: response.message,
+            })
+
+            // Create a timeout loop to call the backend to get the latest details
+            const interval = setInterval(async () => {
+                const response = await fetchData<any>('/status/phase6', {
+                    method: 'GET',
+                })
+
+                if (response) {
+                    if (response.is_complete === true) {
+                        clearInterval(interval)
+                        setLoading(false)
+                        setUploadStatus(null)
+
+                        // TODO
+                    } else {
+                        setUploadStatus({ mode: 300, message: response.message })
+                    }
+                } else {
+                    clearInterval(interval)
+                    setLoading(false)
+                    setUploadStatus({ mode: 500, message: 'Failed to get status update.' }) // Inform user about status check failure
+                }
+            }, 2000)
+        } else {
+            setUploadStatus({ mode: 500, message: 'Failed to start face detection.' }) // More specific error
+            setLoading(false)
+        }
+    }
 
     return (
         <div className="container mx-auto px-4 py-6 text-gray-900 dark:text-gray-100">
@@ -188,7 +241,7 @@ const page = (props: Props) => {
             {!loading && Object.keys(imageGroup).length > 0 && (
                 <div className="mt-6 flex justify-end">
                     <button
-                        // onClick={handleContinue} // Add your continue logic handler here
+                        onClick={handleContinue}
                         className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md shadow focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600">
                         Continue
                     </button>
