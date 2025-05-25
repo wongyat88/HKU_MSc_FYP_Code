@@ -14,7 +14,7 @@ import requests
 from funasr.utils.postprocess_utils import rich_transcription_postprocess
 
 from app.audio_processing import get_asr_model
-
+from app.utils.tools import call_llm_api
 
 SOVITS_SERVER = config("SOVITS_SERVER")
 server_url = SOVITS_SERVER + "/generate_audio"
@@ -47,6 +47,71 @@ def process_generation(data, phase3_dir, phase4_dir, single_update):
     )
     thread.daemon = True
     thread.start()
+
+
+def process_generation2(
+    output_language, phase3_dir, phase4_dir, final_result_json, api_status_path
+):
+    # Start a thread to process the video asynchronously
+    thread = threading.Thread(
+        target=_process_ai_check_thread,
+        args=(
+            output_language,
+            phase3_dir,
+            phase4_dir,
+            final_result_json,
+            api_status_path,
+        ),
+    )
+    thread.daemon = True
+    thread.start()
+
+
+def _process_ai_check_thread(
+    output_language, phase3_dir, phase4_dir, final_result_json, api_status_path
+):
+    prompt = f"""
+Given you a JSON, the key 'text' is the original text, while "translated_text" is translate of the 'text' from {output_language}.
+The JSON already given you the 'generated_audio_duration' and 'generated_audio_speed'.
+Your goal is update the `translated_text` to longer if generated_audio_speed' is smaller then 0.93.
+- You can focus on the 'text', if there are repetition, the `translated_text` should follow the repetition structure.
+- You can also add some filler words to make the `translated_text` longer.
+Your goal is update the `translated_text` to shorter if generated_audio_speed' is larger then 1.2.
+- You can focus on the 'translated_text', if there are repetition or repeated meaning phase, remove them.
+- You can focus on the 'translated_text', if there are filler words, remove them.
+
+Return a JSON with the updated `translated_text`, the new JSON do not need to include 'generated_audio_duration' and 'generated_audio_speed' keys.
+Here is the JSON:
+{final_result_json}
+"""
+    update_status(
+        api_status_path,
+        "ai_check",
+        False,
+        f"AI check start ...",
+    )
+    print(prompt)
+
+    response = call_llm_api(prompt)
+
+    json_data = json.loads(response)
+
+    # Save the response to the translated_data.json file
+    output_json_path = os.path.join(phase3_dir, "translated_data.json")
+    with open(output_json_path, "w", encoding="utf-8") as f:
+        json.dump(json_data, f, ensure_ascii=False, indent=4)
+
+    # Clear phase 4 directory
+    if os.path.exists(phase4_dir):
+        shutil.rmtree(phase4_dir)
+    os.makedirs(phase4_dir, exist_ok=True)
+
+    update_status(
+        api_status_path,
+        "ai_check",
+        True,
+        f"AI check completed, ...",
+    )
 
 
 def process_respeed(id, speed, phase4_dir, API_STATUS_PATH):

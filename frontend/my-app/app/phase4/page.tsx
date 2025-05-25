@@ -18,10 +18,7 @@ const Page = (props: Props) => {
     const [modeList, setModeList] = useState<any>(null)
     const [selectedModels, setSelectedModels] = useState<{
         [key: string]: { sovits: string; gpt: string }
-    }>({
-        SPEAKER_00: { sovits: '', gpt: '' },
-        SPEAKER_01: { sovits: '', gpt: '' },
-    })
+    }>({})
     const [finalResult, setFinalResult] = useState<any>(null)
 
     const [loading, setLoading] = useState<boolean>(false)
@@ -33,7 +30,57 @@ const Page = (props: Props) => {
                 const result = await fetchData<any>('/phase4/model-list', {
                     method: 'GET',
                 })
-                setModeList(result)
+
+                // Extract the model list and filter unused models
+                const newSelectedModels = { ...selectedModels }
+
+                const newGPTList: any = []
+                const newSoVitsList: any = []
+
+                Object.keys(result.name).forEach((speaker) => {
+                    if (!newSelectedModels[speaker]) {
+                        newSelectedModels[speaker] = {
+                            sovits: '',
+                            gpt: '',
+                        }
+                    }
+
+                    console.log(result.name[speaker]['gpt'])
+                    const gptModels = result.model_list.gpt_model_list
+                        .filter((model: string) => model.includes(result.name[speaker]['gpt']))
+                        .sort((a: string, b: string) => {
+                            const getE = (str: string) =>
+                                parseInt(str.match(/-?e(\d+)/)?.[1] || '0')
+                            return getE(a) - getE(b)
+                        })
+                    newGPTList.push(...gptModels)
+
+                    const sovitsModels = result.model_list.sovits_model_list
+                        .filter((model: string) => model.includes(result.name[speaker]['sovits']))
+                        .sort((a: string, b: string) => {
+                            const getE = (str: string) =>
+                                parseInt(str.match(/-?e(\d+)/)?.[1] || '0')
+                            return getE(a) - getE(b)
+                        })
+                    newSoVitsList.push(...sovitsModels)
+
+                    if (sovitsModels.length > 0) {
+                        newSelectedModels[speaker].sovits = sovitsModels[sovitsModels.length - 1]
+                    }
+                    if (gptModels.length > 0) {
+                        newSelectedModels[speaker].gpt = gptModels[gptModels.length - 1]
+                    }
+                })
+
+                setModeList({
+                    name: result.name,
+                    model_list: {
+                        sovits_model_list: newSoVitsList,
+                        gpt_model_list: newGPTList,
+                    },
+                })
+
+                setSelectedModels(newSelectedModels)
             } catch (error) {
                 console.error('Error fetching model list:', error)
             }
@@ -60,18 +107,27 @@ const Page = (props: Props) => {
         if (modeList) {
             const newSelectedModels = { ...selectedModels }
             Object.keys(modeList.name).forEach((speaker) => {
+                if (!newSelectedModels[speaker]) {
+                    newSelectedModels[speaker] = {
+                        sovits: '',
+                        gpt: '',
+                    }
+                }
+
+                console.log(modeList.name[speaker]['gpt'])
                 const gptModels = modeList.model_list.gpt_model_list
+                    .filter((model: string) => model.includes(modeList.name[speaker]['gpt']))
                     .sort((a: string, b: string) => {
                         const getE = (str: string) => parseInt(str.match(/-?e(\d+)/)?.[1] || '0')
                         return getE(a) - getE(b)
                     })
-                    .filter((model: string) => model.startsWith(`${speaker}_gpt`))
+
                 const sovitsModels = modeList.model_list.sovits_model_list
+                    .filter((model: string) => model.includes(modeList.name[speaker]['sovits']))
                     .sort((a: string, b: string) => {
                         const getE = (str: string) => parseInt(str.match(/-?e(\d+)/)?.[1] || '0')
                         return getE(a) - getE(b)
                     })
-                    .filter((model: string) => model.startsWith(`${speaker}_sovits`))
 
                 if (sovitsModels.length > 0) {
                     newSelectedModels[speaker].sovits = sovitsModels[sovitsModels.length - 1]
@@ -104,6 +160,58 @@ const Page = (props: Props) => {
             const interval = setInterval(async () => {
                 try {
                     const statusResponse = await fetchData<any>('/status/phase4', {
+                        method: 'GET',
+                    })
+
+                    if (statusResponse) {
+                        if (statusResponse.is_complete === true) {
+                            clearInterval(interval)
+                            setLoading(false)
+                            setUploadStatus({ mode: 200, message: 'Generation complete!' })
+                            window.location.reload()
+                        } else {
+                            setUploadStatus({
+                                mode: 300,
+                                message: statusResponse.message || 'Processing...',
+                            })
+                        }
+                    } else {
+                        clearInterval(interval)
+                        setLoading(false)
+                        setUploadStatus({ mode: 500, message: 'Failed to get status.' })
+                    }
+                } catch (error) {
+                    console.error('Error fetching status:', error)
+                    clearInterval(interval)
+                    setLoading(false)
+                    setUploadStatus({ mode: 500, message: 'Error fetching status.' })
+                }
+            }, 3000)
+        } else {
+            setUploadStatus({ mode: 500, message: 'Generation request failed' })
+            setLoading(false)
+        }
+    }
+
+    const handleGenerate2 = async () => {
+        setLoading(true)
+        setUploadStatus(null)
+        const response = await fetchData<any>('/phase4/generate2', {
+            method: 'POST',
+            body: JSON.stringify({
+                selectedModels,
+            }),
+        })
+
+        if (response) {
+            setUploadStatus({
+                mode: 300,
+                message: response.message || 'Generation started...',
+            })
+
+            const interval = setInterval(async () => {
+                try {
+                    const statusResponse = await fetchData<any>('/status/ai_check', {
                         method: 'GET',
                     })
 
@@ -208,6 +316,16 @@ const Page = (props: Props) => {
                 </div>
                 <div className="mt-4 flex flex-wrap items-center justify-end gap-3">
                     {' '}
+                    <button
+                        onClick={handleGenerate2}
+                        disabled={loading}
+                        className={`rounded px-4 py-2 font-bold text-white ${
+                            loading
+                                ? 'cursor-not-allowed bg-gray-500'
+                                : 'bg-green-500 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-800'
+                        }`}>
+                        {loading ? 'Generating...' : 'Generate Audio with AI Adjustments'}
+                    </button>
                     <button
                         onClick={handleGenerate}
                         disabled={loading}

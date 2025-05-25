@@ -13,3 +13,5 @@ small100
 /face_detection/images
 /face_detection/temp
 /remove_vocal_on_video
+/backend/public/phase5_backup
+/backend/.env

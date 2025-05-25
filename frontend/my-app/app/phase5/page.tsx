@@ -98,6 +98,13 @@ const page = (props: Props) => {
             })
         )
 
+        // if the key name is 'Non Speaker', remove it from the object
+        Object.keys(selectedSpeakers).forEach((key) => {
+            if (key === 'Non Speaker') {
+                delete selectedSpeakers[key]
+            }
+        })
+
         console.log('Selected Speakers:', selectedSpeakers)
 
         setLoading(true)
@@ -124,7 +131,7 @@ const page = (props: Props) => {
                         setLoading(false)
                         setUploadStatus(null)
 
-                        // TODO
+                        window.location.href = `/phase6`
                     } else {
                         setUploadStatus({ mode: 300, message: response.message })
                     }

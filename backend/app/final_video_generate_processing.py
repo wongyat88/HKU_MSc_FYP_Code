@@ -14,6 +14,8 @@ from moviepy.editor import (
 )
 from moviepy.video.io.ffmpeg_writer import FFMPEG_VideoWriter
 
+from app.utils.videoMix import mix_video
+
 SOVITS_SERVER = config("SOVITS_SERVER")
 FACE_DETECTION_PATH = config("FACE_DETECTION_PATH")
 WAV_2_LIP_PATH = config("WAV_2_LIP_PATH")
@@ -412,11 +414,20 @@ def _process_final_generation_thread(
 
     cluster_mapping = {}
     index = 0
-    for i in range(len(speaker_list)):
+    # face_detection_result_json is like {'SPEAKER_01': 0, 'SPEAKER_00': 1}
+    # Return Result as '{'0': ['0'], '1': ['1'], '2': ['2']}'
+    # ! No need to match the speaker, as doing wav2lip will match, so now just loop and create
+    for i in face_detection_result_json:
+        # Based on the face_detection_result_json, as not all speakers will have face
         cluster_mapping[str(index)] = [str(index)]
         index += 1
 
+    # for i in range(len(speaker_list)):
+    #     cluster_mapping[str(index)] = [str(index)]
+    #     index += 1
+
     print(f"Cluster mapping: {cluster_mapping}")
+    print(f"Face detection result JSON: {face_detection_result_json}")
 
     # Create a masked video for each speaker
     python_executable = os.path.join(
@@ -437,7 +448,7 @@ def _process_final_generation_thread(
     ]
 
     # * Uncomment the following line to run the command
-    # subprocess.run(mask_cmd, check=True)
+    subprocess.run(mask_cmd, check=True)
 
     """
     Key will be the speaker, value will be cluster group id
@@ -445,9 +456,11 @@ def _process_final_generation_thread(
     """
     package_data = {}
     # Call wav2lip to generate the lip synced video for each speaker
-    for i in range(len(speaker_list)):
+    # for i in range(len(speaker_list)):
+    for k, v in face_detection_result_json.items():
+        print(f"Processing wav2lip on speaker: {k}, cluster group id: {v}")
         # Get the speaker name and cluster group id from the face_detection_result_json
-        speaker_name = speaker_list[i]
+        speaker_name = k
 
         update_status(
             api_path,
@@ -456,9 +469,7 @@ def _process_final_generation_thread(
             f"Start lip sync on {speaker_name} ...",
         )
 
-        print(face_detection_result_json)
-
-        cluster_group_id = face_detection_result_json[speaker_name]
+        cluster_group_id = v
 
         # Get the audio path for the speaker
         audio_path = os.path.join(phase5_dir, f"{speaker_name}.wav")
@@ -496,11 +507,11 @@ def _process_final_generation_thread(
         ]
 
         # * Uncomment the following line to run the command
-        # subprocess.run(
-        #     wav2lip_cmd,
-        #     check=True,
-        #     cwd=WAV_2_LIP_PATH,
-        # )
+        subprocess.run(
+            wav2lip_cmd,
+            check=True,
+            cwd=WAV_2_LIP_PATH,
+        )
 
     # Remove vocals from original wav file
     update_status(
@@ -528,20 +539,76 @@ def _process_final_generation_thread(
     ]
 
     # * Uncomment the following line to run the command
-    # subprocess.run(demucs_cmd, check=True)
+    subprocess.run(demucs_cmd, check=True)
 
     # Get the path to the no_vocals.wav file
     no_vocals_path = os.path.join(phase5_dir, "htdemucs", "no_vocals.wav")
 
+    # ! There may speaker that do not have face detected, so we need to combine those audios to the no_vocals audio
+    # Check who speaker do not have face detected
+    missing_speakers = [
+        speaker for speaker in speaker_list if speaker not in face_detection_result_json
+    ]
+    other_sound_path = os.path.join(phase5_dir, "other_sound.wav")
+
+    # Load the no_vocals audio once
+    no_vocals_audio = AudioSegment.from_wav(no_vocals_path)
+
+    if missing_speakers:
+        print(f"Missing speakers: {missing_speakers}")
+        # Combine the audio of the missing speakers to the no_vocals audio
+        for speaker in missing_speakers:
+            speaker_audio_path = os.path.join(phase5_dir, f"{speaker}.wav")
+            if os.path.exists(speaker_audio_path):
+                # Load the speaker audio
+                speaker_audio = AudioSegment.from_wav(speaker_audio_path)
+
+                # Overlay the speaker's audio on the existing combined audio
+                no_vocals_audio = no_vocals_audio.overlay(speaker_audio)
+
+    # Export the final combined audio to the output path
+    no_vocals_audio.export(other_sound_path, format="wav")
+
+    # ! This part is to remove the audio only
+    # # Get the path to the original video
+    # original_video_path = os.path.join(input_dir, "original_video.mp4")
+
+    # # Create a original video without sound
+    # original_video_no_sound_path = os.path.join(
+    #     phase5_dir, "original_video_no_sound.mp4"
+    # )
+    # original_video = VideoFileClip(original_video_path)
+    # original_video = original_video.set_audio(None)
+
+    # print(f"Original video: {original_video.fps} fps, {original_video.reader.fps} fps")
+    # output_fps = (
+    #     original_video.reader.fps if hasattr(original_video.reader, "fps") else 30.0
+    # )
+    # # Ensure we have a valid FPS
+    # if output_fps is None:
+    #     output_fps = 30.0  # Default fallback
+
+    # original_video.write_videofile(
+    #     original_video_no_sound_path,
+    #     codec="libx264",
+    #     audio_codec="aac",
+    #     fps=output_fps,
+    # )
+    # original_video.close()
+    # ! End
+
     # Get the path to the original video
     original_video_path = os.path.join(input_dir, "original_video.mp4")
 
-    # Create a original video without sound
+    # Create a original video with no_vocals audio
     original_video_no_sound_path = os.path.join(
         phase5_dir, "original_video_no_sound.mp4"
     )
     original_video = VideoFileClip(original_video_path)
-    original_video = original_video.set_audio(None)
+    no_vocals_audio = AudioFileClip(no_vocals_path)
+
+    # Replace the audio with no_vocals audio
+    original_video = original_video.set_audio(no_vocals_audio)
 
     print(f"Original video: {original_video.fps} fps, {original_video.reader.fps} fps")
     output_fps = (
@@ -558,29 +625,25 @@ def _process_final_generation_thread(
         fps=output_fps,
     )
     original_video.close()
+    no_vocals_audio.close()
 
-    # Get the path of the detection result JSON file
-    detection_result_json_path = os.path.join(phase5_dir, "detection_output.json")
-    with open(detection_result_json_path, "r", encoding="utf-8") as f:
-        detection_result_json = json.load(f)
-
-    # Get the path to the output video
-    output_video_path = os.path.join(phase5_dir, "final_video.mp4")
-
-    # Extract the processed masked video for each speaker and merge to the original video
-    update_status(
-        api_path,
-        "phase6",
-        False,
-        "Start Merging processed masked video ...",
-    )
-
-    merge_faces_and_audio(
-        package_data,
+    # original_video = "L:/MSCCS Project/HKU_MSc_FYP/video_mixing/phase5/original_video_no_sound.mp4"
+    # mask_videos = ["L:/MSCCS Project/HKU_MSc_FYP/video_mixing/phase5/SPEAKER_00.mp4",
+    #               "L:/MSCCS Project/HKU_MSc_FYP/video_mixing/phase5/SPEAKER_01.mp4"]
+    # master_save_dir = "L:/MSCCS Project/HKU_MSc_FYP/video_mixing/temp"
+    video_list = []
+    # for i in speaker_list:
+    for i in face_detection_result_json:
+        # Get the speaker name and cluster group id from the face_detection_result_json
+        speaker_name = i
+        video_list.append(os.path.join(phase5_dir, f"{speaker_name}.mp4"))
+    print(f"Video list: {video_list}")
+    mix_video(
         original_video_no_sound_path,
-        no_vocals_path,
-        output_video_path,
-        detection_result_json,
+        video_list,
+        phase5_dir,
+        api_path,
+        other_sound_path,
     )
 
     update_status(

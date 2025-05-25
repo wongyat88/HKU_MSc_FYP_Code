@@ -13,7 +13,11 @@ from fastapi.staticfiles import StaticFiles
 
 from app.translation_processing import process_translation
 from app.training_processing import process_training
-from app.generation_processing import process_generation, process_respeed
+from app.generation_processing import (
+    process_generation,
+    process_respeed,
+    process_generation2,
+)
 from app.final_video_generate_processing import (
     process_face_detection,
     process_final_generation,
@@ -107,10 +111,12 @@ async def upload_video(
         if os.path.exists(input_video_path):
             os.remove(input_video_path)
 
-        # Clean the phase1 directory
-        if os.path.exists(PHASE1_DIR):
-            shutil.rmtree(PHASE1_DIR)
-            os.makedirs(PHASE1_DIR)
+        # Clean the all the phase directory
+        work_location = [PHASE1_DIR, PHASE2_DIR, PHASE3_DIR, PHASE4_DIR, PHASE5_DIR]
+        for location in work_location:
+            if os.path.exists(location):
+                shutil.rmtree(location)
+                os.makedirs(location)
 
         # Reset API status
         updateApiStatus(
@@ -505,6 +511,36 @@ async def generate(
     return {"message": "Generation processing started."}
 
 
+@app.post("/phase4/generate2")
+async def generate2():
+    # ! Get the duration and speed to AI, and let AI to regenerate the translation text that much fit the audio duration
+
+    # Get the output audio file which have the duration and speed
+    final_result_path = os.path.join(PHASE4_DIR, "final_result.json")
+
+    if not os.path.exists(final_result_path):
+        logger.error("Final result json not found")
+        return {"message": "Final result json not found, run 'generate' first."}
+
+    with open(final_result_path, "r", encoding="utf-8") as final_result_file:
+        final_result_json = json.load(final_result_file)
+
+    # Get the output language
+    get_language_setting_path = INPUT_DIR + "/language.json"
+    with open(get_language_setting_path, "r") as f:
+        language_setting = json.load(f)
+
+    process_generation2(
+        language_setting["output_language"],
+        PHASE3_DIR,
+        PHASE4_DIR,
+        final_result_json,
+        API_STATUS_PATH,
+    )
+
+    return {"message": "AI checking processing started."}
+
+
 @app.get("/phase4/result")
 async def get_generation_result():
     try:
@@ -742,6 +778,9 @@ async def get_detection_result():
                         if q["speaker"] == speaker_name:
                             speaker_audio[speaker_name] = q["file_path"]
                             break
+
+        # Add `Non Speaker` to the speaker_list
+        speaker_list.append({"name": "Non Speaker"})
 
         return {
             "image_group": grouped_files,

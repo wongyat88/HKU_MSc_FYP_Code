@@ -91,6 +91,7 @@ def _process_training_thread(input_path, phase3_dir, api_status_path):
         now_str = str(int(now.timestamp()))
 
         model_name[speaker]["sovits"] = speaker + "_sovits_" + now_str + "1"
+        print(f"Model name for {speaker}: {model_name[speaker]['sovits']}")
 
         # Loop all speaker to train the SoVits models
         server_url = SOVITS_SERVER + "/training/sovits"
@@ -103,13 +104,13 @@ def _process_training_thread(input_path, phase3_dir, api_status_path):
             )
 
             returnData = {
-                "batch_size": 11,
-                "epoch": 8,
+                "batch_size": 1,  # 1/2/5/8/12/14
+                "epoch": 4,
                 "exp_name": model_name[speaker]["sovits"],
                 "text_low_lr_rate": 0.4,
                 "if_save_latest": True,
                 "if_save_every_weights": True,
-                "save_every_n_epoch": 4,
+                "save_every_n_epoch": 2,
                 "gpunumbers": "0",
                 "pretrained_s2G": "gsv-v2final-pretrained/s2G2333k.pth",
                 "pretrained_s2D": "gsv-v2final-pretrained/s2G2333k.pth",
@@ -190,8 +191,8 @@ def _process_training_thread(input_path, phase3_dir, api_status_path):
             response = requests.post(
                 server_url,
                 json={
-                    "batch_size": 11,
-                    "epoch": 15,
+                    "batch_size": 4,
+                    "epoch": 10,
                     "exp_name": model_name[speaker]["gpt"],
                     "if_dpo": False,
                     "if_save_latest": True,
