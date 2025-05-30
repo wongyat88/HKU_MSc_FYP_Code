@@ -5,108 +5,279 @@
         "data": [
             {
                 "id": 1,
-                "speaker": "SPEAKER_02",
-                "start_time": 0.03096875,
-                "end_time": 2.9334687500000003,
-                "duration": 2.9025000000000003,
-                "file_path": "SPEAKER\\SPEAKER_02_1.wav",
-                "text": "Tell me this week doesn't feel like the playoffs already started."
+                "speaker": "SPEAKER_00",
+                "start_time": 1.22909375,
+                "end_time": 1.44846875,
+                "duration": 0.21937499999999988,
+                "file_path": "SPEAKER\\SPEAKER_00_1.wav",
+                "text": "\u3046\u3093."
             },
             {
                 "id": 2,
                 "speaker": "SPEAKER_01",
-                "start_time": 2.9334687500000003,
-                "end_time": 2.9672187500000002,
-                "duration": 0.03374999999999995,
+                "start_time": 1.44846875,
+                "end_time": 1.68471875,
+                "duration": 0.23625000000000007,
                 "file_path": "SPEAKER\\SPEAKER_01_2.wav",
-                "text": "[Transcription error]"
+                "text": "\u3046\u3002"
             },
             {
                 "id": 3,
-                "speaker": "SPEAKER_01",
-                "start_time": 3.33846875,
-                "end_time": 6.257843750000001,
-                "duration": 2.919375000000001,
-                "file_path": "SPEAKER\\SPEAKER_01_3.wav",
-                "text": "I mean, it does, we've set a goal of."
+                "speaker": "SPEAKER_00",
+                "start_time": 2.0559687500000003,
+                "end_time": 5.58284375,
+                "duration": 3.526875,
+                "file_path": "SPEAKER\\SPEAKER_00_3.wav",
+                "text": "Hi, everyone. This is Louisis Hamilton, and."
             },
             {
                 "id": 4,
-                "speaker": "SPEAKER_01",
-                "start_time": 6.46034375,
-                "end_time": 19.53846875,
-                "duration": 13.078125,
-                "file_path": "SPEAKER\\SPEAKER_01_4.wav",
-                "text": "Trying to lift our level of play preparing for hopefully a playoff series, but we know every game matters down the stretch and the intensity has been crazy and that's what you love like having something to play for is especially."
+                "speaker": "SPEAKER_00",
+                "start_time": 5.785343750000001,
+                "end_time": 6.7134687500000005,
+                "duration": 0.9281249999999996,
+                "file_path": "SPEAKER\\SPEAKER_00_4.wav",
+                "text": "I'm Ro.\ud83d\ude0a"
             },
             {
                 "id": 5,
-                "speaker": "SPEAKER_02",
-                "start_time": 19.977218750000002,
-                "end_time": 31.06409375,
-                "duration": 11.086875,
-                "file_path": "SPEAKER\\SPEAKER_02_5.wav",
-                "text": "You've definitely a us with your three point shooting before, but tonight under the basket there was some serious creativity, do you practice the falling out of bounds, getting foul flip over the head or do those things just come with the shooter touch?"
+                "speaker": "SPEAKER_00",
+                "start_time": 7.185968750000001,
+                "end_time": 8.14784375,
+                "duration": 0.9618749999999991,
+                "file_path": "SPEAKER\\SPEAKER_00_5.wav",
+                "text": "Where are we right now."
             },
             {
                 "id": 6,
                 "speaker": "SPEAKER_01",
-                "start_time": 31.671593750000003,
-                "end_time": 36.36284375,
-                "duration": 4.69125,
+                "start_time": 8.41784375,
+                "end_time": 9.160343750000003,
+                "duration": 0.7425000000000033,
                 "file_path": "SPEAKER\\SPEAKER_01_6.wav",
-                "text": "My mom always used to say I was like the clumsiest kids, so' I'm good when I'm off balance."
+                "text": "We're here in sell."
             },
             {
                 "id": 7,
-                "speaker": "SPEAKER_02",
-                "start_time": 36.63284375,
-                "end_time": 46.20096875,
-                "duration": 9.568125000000002,
-                "file_path": "SPEAKER\\SPEAKER_02_7.wav",
-                "text": "I love it lastly this puts you within a game in half of Denver they're up next on your schedule just what's the Jimmy butler effect on the confidence the spirit and everything heading into these critical games."
+                "speaker": "SPEAKER_00",
+                "start_time": 9.66659375,
+                "end_time": 10.544093750000002,
+                "duration": 0.8775000000000013,
+                "file_path": "SPEAKER\\SPEAKER_00_7.wav",
+                "text": "Sa."
             },
             {
                 "id": 8,
                 "speaker": "SPEAKER_01",
-                "start_time": 47.75346875,
-                "end_time": 56.29221875,
-                "duration": 8.53875,
+                "start_time": 10.25721875,
+                "end_time": 12.67034375,
+                "duration": 2.413125000000001,
                 "file_path": "SPEAKER\\SPEAKER_01_8.wav",
-                "text": "He doesn't need to remind anybody who he is and what he's accomplished everywhere he's gone, just the competitiveness and the presence."
+                "text": "The preview of the Rammona."
             },
             {
                 "id": 9,
-                "speaker": "SPEAKER_01",
-                "start_time": 57.102218750000006,
-                "end_time": 81.36846875,
-                "duration": 24.26625,
-                "file_path": "SPEAKER\\SPEAKER_01_9.wav",
-                "text": "You don't have to look at the box score every night, you very similar to Drmon us he's going to be in the right place, make the right place, if he needs a score he can, he can play mate, obviously can guard and we've been great since he's been here for all of those reasons BPP was unbelievable tonight stepping up in the first half, Moses gave us great minutes, JK coming off his injury so as Jimmymy and everybody and we need everybody to win."
+                "speaker": "SPEAKER_00",
+                "start_time": 12.73784375,
+                "end_time": 13.31159375,
+                "duration": 0.5737500000000004,
+                "file_path": "SPEAKER\\SPEAKER_00_9.wav",
+                "text": "Yes."
             },
             {
                 "id": 10,
-                "speaker": "SPEAKER_02",
-                "start_time": 81.55409375,
-                "end_time": 83.79846875000001,
-                "duration": 2.244375000000005,
-                "file_path": "SPEAKER\\SPEAKER_02_10.wav",
-                "text": "Ggrats on the huge road Win, good luck the rest of."
+                "speaker": "SPEAKER_01",
+                "start_time": 13.21034375,
+                "end_time": 13.294718750000001,
+                "duration": 0.08437500000000142,
+                "file_path": "SPEAKER\\SPEAKER_01_10.wav",
+                "text": ""
             },
             {
                 "id": 11,
+                "speaker": "SPEAKER_01",
+                "start_time": 13.31159375,
+                "end_time": 15.57284375,
+                "duration": 2.2612500000000004,
+                "file_path": "SPEAKER\\SPEAKER_01_11.wav",
+                "text": "Mint and papaya election."
+            },
+            {
+                "id": 12,
+                "speaker": "SPEAKER_01",
+                "start_time": 18.08721875,
+                "end_time": 19.79159375,
+                "duration": 1.7043749999999989,
+                "file_path": "SPEAKER\\SPEAKER_01_12.wav",
+                "text": "You can never go wrong with But Molly."
+            },
+            {
+                "id": 13,
                 "speaker": "SPEAKER_00",
-                "start_time": 84.22034375000001,
-                "end_time": 98.10846875,
-                "duration": 13.888124999999988,
-                "file_path": "SPEAKER\\SPEAKER_00_11.wav",
-                "text": "Big win for the Golden State Wars. They've won four in a row and 13 of their last 16 games. they've won four straight on the road. They are now winning 10 of their last 13 away from Sanci."
+                "start_time": 19.72409375,
+                "end_time": 20.14596875,
+                "duration": 0.421875,
+                "file_path": "SPEAKER\\SPEAKER_00_13.wav",
+                "text": "\u55ef\u3002\ud83e\udd22"
+            },
+            {
+                "id": 14,
+                "speaker": "SPEAKER_01",
+                "start_time": 20.14596875,
+                "end_time": 22.660343750000003,
+                "duration": 2.514375000000001,
+                "file_path": "SPEAKER\\SPEAKER_01_14.wav",
+                "text": "I put music on every morning when I wait, start my day."
+            },
+            {
+                "id": 15,
+                "speaker": "SPEAKER_00",
+                "start_time": 25.25909375,
+                "end_time": 29.37659375,
+                "duration": 4.1175,
+                "file_path": "SPEAKER\\SPEAKER_00_15.wav",
+                "text": "\ud83c\udfbcI feel like my sister sneak into a wardrobe and her makeup to."
+            },
+            {
+                "id": 16,
+                "speaker": "SPEAKER_01",
+                "start_time": 27.824093750000003,
+                "end_time": 27.92534375,
+                "duration": 0.10124999999999673,
+                "file_path": "SPEAKER\\SPEAKER_01_16.wav",
+                "text": ""
+            },
+            {
+                "id": 17,
+                "speaker": "SPEAKER_01",
+                "start_time": 29.37659375,
+                "end_time": 32.329718750000005,
+                "duration": 2.9531250000000036,
+                "file_path": "SPEAKER\\SPEAKER_01_17.wav",
+                "text": "For yes, okay the definitely look up to."
+            },
+            {
+                "id": 18,
+                "speaker": "SPEAKER_00",
+                "start_time": 29.933468750000003,
+                "end_time": 30.43971875,
+                "duration": 0.5062499999999979,
+                "file_path": "SPEAKER\\SPEAKER_00_18.wav",
+                "text": "Yes."
+            },
+            {
+                "id": 19,
+                "speaker": "SPEAKER_00",
+                "start_time": 32.48159375,
+                "end_time": 32.88659375,
+                "duration": 0.40500000000000114,
+                "file_path": "SPEAKER\\SPEAKER_00_19.wav",
+                "text": "Yeah."
+            },
+            {
+                "id": 20,
+                "speaker": "SPEAKER_01",
+                "start_time": 35.06346875,
+                "end_time": 39.11346875,
+                "duration": 4.050000000000004,
+                "file_path": "SPEAKER\\SPEAKER_01_20.wav",
+                "text": "When I was younger, I did, and this is like creating your mind thinking that that was the way."
+            },
+            {
+                "id": 21,
+                "speaker": "SPEAKER_01",
+                "start_time": 39.45096875,
+                "end_time": 43.197218750000005,
+                "duration": 3.7462500000000034,
+                "file_path": "SPEAKER\\SPEAKER_01_21.wav",
+                "text": "It get like perfect output and then I missed one of these.\ud83d\ude0a"
+            },
+            {
+                "id": 22,
+                "speaker": "SPEAKER_00",
+                "start_time": 39.67034375,
+                "end_time": 39.95721875,
+                "duration": 0.286875000000002,
+                "file_path": "SPEAKER\\SPEAKER_00_22.wav",
+                "text": "\u3064\u3002"
+            },
+            {
+                "id": 23,
+                "speaker": "SPEAKER_00",
+                "start_time": 41.27346875,
+                "end_time": 41.492843750000006,
+                "duration": 0.21937500000000654,
+                "file_path": "SPEAKER\\SPEAKER_00_23.wav",
+                "text": ""
+            },
+            {
+                "id": 24,
+                "speaker": "SPEAKER_00",
+                "start_time": 41.813468750000006,
+                "end_time": 42.06659375,
+                "duration": 0.25312499999999716,
+                "file_path": "SPEAKER\\SPEAKER_00_24.wav",
+                "text": "And."
+            },
+            {
+                "id": 25,
+                "speaker": "SPEAKER_01",
+                "start_time": 43.55159375,
+                "end_time": 45.44159375,
+                "duration": 1.8900000000000006,
+                "file_path": "SPEAKER\\SPEAKER_01_25.wav",
+                "text": "One of these sequences and I crashed."
+            },
+            {
+                "id": 26,
+                "speaker": "SPEAKER_00",
+                "start_time": 44.564093750000005,
+                "end_time": 45.23909375,
+                "duration": 0.6749999999999972,
+                "file_path": "SPEAKER\\SPEAKER_00_26.wav",
+                "text": "And I crap."
+            },
+            {
+                "id": 27,
+                "speaker": "SPEAKER_01",
+                "start_time": 46.50471875,
+                "end_time": 51.938468750000006,
+                "duration": 5.433750000000003,
+                "file_path": "SPEAKER\\SPEAKER_01_27.wav",
+                "text": "\ud83c\udfbcAnd after that, I was like, okay, this is just all in my head. So I got rid of it. So now I just like, listen to music."
+            },
+            {
+                "id": 28,
+                "speaker": "SPEAKER_00",
+                "start_time": 49.727843750000005,
+                "end_time": 50.21721875,
+                "duration": 0.48937499999999545,
+                "file_path": "SPEAKER\\SPEAKER_00_28.wav",
+                "text": "Okay."
+            },
+            {
+                "id": 29,
+                "speaker": "SPEAKER_00",
+                "start_time": 50.40284375,
+                "end_time": 51.314093750000005,
+                "duration": 0.9112500000000026,
+                "file_path": "SPEAKER\\SPEAKER_00_29.wav",
+                "text": "So now I just like."
+            },
+            {
+                "id": 30,
+                "speaker": "SPEAKER_00",
+                "start_time": 52.07346875,
+                "end_time": 52.174718750000004,
+                "duration": 0.10125000000000028,
+                "file_path": "SPEAKER\\SPEAKER_00_30.wav",
+                "text": ""
             }
         ]
     },
     "phase2": {
         "is_complete": true,
-        "message": "Translation and saving is completed",
+        "message": "Completed preprocessing for all speaker",
         "data": {}
     },
     "phase3": {
@@ -139,13 +310,13 @@
         "message": "Audio combination complete",
         "data": {
             "new_segment": {
-                "id": 15,
-                "speaker": "SPEAKER_00",
-                "start_time": 47.80409375,
-                "end_time": 53.001593750000005,
-                "duration": 4.809375000000003,
-                "file_path": "SPEAKER\\SPEAKER_00_15.wav",
-                "text": "Extending within that period or as soon as we can, the Trump tax cuts."
+                "id": 31,
+                "speaker": "SPEAKER_01",
+                "start_time": 13.21034375,
+                "end_time": 15.57284375,
+                "duration": 2.345625000000002,
+                "file_path": "SPEAKER\\SPEAKER_01_31.wav",
+                "text": "Mint and papaya collection."
             },
             "removed_segments": [
                 10,

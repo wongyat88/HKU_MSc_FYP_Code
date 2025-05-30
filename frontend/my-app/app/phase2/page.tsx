@@ -154,6 +154,7 @@ const page = () => {
     }
 
     const handleSpeakerChange = (index: number, newSpeaker: string) => {
+        console.log('handleSpeakerChange', index, newSpeaker)
         const newData = [...data]
         newData[index].speaker = newSpeaker
         setData(newData)

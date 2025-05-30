@@ -444,6 +444,10 @@ def main(
     n_speakers,
     frame_store_path,
 ):
+    if os.path.exists(frame_store_path):
+        shutil.rmtree(frame_store_path)
+        print(f"Cleaned up temporary frame folder: {frame_store_path}")
+
     # Part 0 - Frame extraction with ffmpeg
     extract_frames_from_video(video_path, frame_store_path)
 

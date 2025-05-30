@@ -4,6 +4,7 @@ from transformers import M2M100ForConditionalGeneration
 from app.models.small100.tokenization_small100 import SMALL100Tokenizer
 from app.models.bart_translation_zh_yue.translation_pipeline import TranslationPipeline
 from app.utils.tools import call_llm_api
+from app.audio_processing import _process_data_preprogessing
 
 # tokenizer.tgt_lang = "zh"  # Change this for different target language
 
@@ -69,13 +70,20 @@ def do_translation(text, src_lang, tgt_lang):
 
 
 def process_translation(
-    src_lang, tgt_lang, json_data, api_status_path, output_json_path
+    src_lang, tgt_lang, json_data, api_status_path, output_json_path, phase1_dir
 ):
     # Start a thread to process the video asynchronously
     thread = threading.Thread(
         # target=_process_translation_thread,
         target=_process_translation_thread_by_ai,
-        args=(src_lang, tgt_lang, json_data, api_status_path, output_json_path),
+        args=(
+            src_lang,
+            tgt_lang,
+            json_data,
+            api_status_path,
+            output_json_path,
+            phase1_dir,
+        ),
     )
     thread.daemon = True
     thread.start()
@@ -88,7 +96,7 @@ def save_result(processed_data, output_json_path):
 
 
 def _process_translation_thread_by_ai(
-    src_lang, tgt_lang, json_data, api_status_path, output_json_path
+    src_lang, tgt_lang, json_data, api_status_path, output_json_path, phase1_dir
 ):
     update_status(
         api_status_path,
@@ -99,7 +107,7 @@ def _process_translation_thread_by_ai(
 
     # Create Prompt for translation
     prompt = f"""
-Given you a JSON, get the key 'text' and do translation to {tgt_lang} (Close to spoken language as possible), then create a new key called "translated_text" to save the translated text.
+Given you a JSON, get the key 'text' and do translation to {tgt_lang} (Close to spoken language as possible), then create a new key called "translated_text" to save the translated text. Also you need to accurately translate the `translated_text` while considering its context.
 Return the JSON with the new key "translated_text" added.
 ```
 {json_data}
@@ -119,8 +127,15 @@ Return the JSON with the new key "translated_text" added.
         update_status(
             api_status_path,
             "phase2",
-            True,
+            False,
             f"Translation and saving is completed",
+        )
+
+        # output_folder, data_json_path, api_status_path
+        _process_data_preprogessing(
+            phase1_dir,
+            output_json_path,
+            api_status_path,
         )
 
         return {}
