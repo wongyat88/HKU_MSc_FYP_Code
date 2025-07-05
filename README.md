@@ -33,11 +33,12 @@ LLM_API_KEY = ""
 
 16. Go to the backend folder and go to the `face_detection` folder, run `pip install -r requirements.txt` to install the dependencies for face detection.
 17. Go to the backend folder and go to the `wav2lip` folder, run `pip install -r requirements.txt` to install the dependencies for wav2lip.
+18. Install the rubberband-4.0.0-gpl-executable-windows from the given folder. Add the `rubberband-4.0.0-gpl-executable-windows` folder to the PATH environment variable.
 
-18. Go to the backend folder and run `python server.py` to start the backend server.
-19. Go to the frontend folder and run `npm run dev` to start the frontend server.
-20. Go to the GPT SoVits folder and run `runtime\python.exe api_v2.py` to start the GPT SoVits server.
-21. Open your browser and go to `http://localhost:3001/` to access the frontend.
+19. Go to the backend folder and run `python server.py` to start the backend server.
+20. Go to the frontend folder and run `npm run dev` to start the frontend server.
+21. Go to the GPT SoVits folder and run `runtime\python.exe api_v2.py` to start the GPT SoVits server.
+22. Open your browser and go to `http://localhost:3001/` to access the frontend.
 
 ### Hugging Face Details
 
