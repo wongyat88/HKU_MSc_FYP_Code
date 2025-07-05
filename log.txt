@@ -1,0 +1,41 @@
+commit aedba6b56f67d1c4ba61e9ef95d1b49829e75252
+Author: wongyat88 <wongyat88123456@gmail.com>
+Date:   Fri May 30 17:34:02 2025 +0800
+
+    Bug Update
+
+commit 508008fe40a1002626d66c9a82453615645c75e0
+Author: wongyat88 <wongyat88123456@gmail.com>
+Date:   Sun May 25 21:04:27 2025 +0800
+
+    Final Version 1.0
+
+commit 09bc9af013412ce2a6957e57f8897e47324b3e13
+Author: wongyat88 <wongyat88123456@gmail.com>
+Date:   Fri May 2 16:11:49 2025 +0800
+
+    Completed some parts on the final process, but merge video is not complete
+
+commit 4eb0ab23b1afdecb9fc63f00e25dafc0b2a5194e
+Author: wongyat88 <wongyat88123456@gmail.com>
+Date:   Thu May 1 20:23:07 2025 +0800
+
+    Completed UI and backend for Face detection
+
+commit 032e151d3609f8fba3422e55c851ccae1b01573e
+Author: wongyat88 <wongyat88123456@gmail.com>
+Date:   Fri Apr 25 15:38:17 2025 +0800
+
+    Complete UI for audio generation page with speed adjust / translation text adjust
+
+commit 012951fd5cc238c87e37804e559be725c3ca2228
+Author: wongyat88 <wongyat88123456@gmail.com>
+Date:   Thu Apr 24 20:53:33 2025 +0800
+
+    Complete phase 2 on training and generate audio with SoVits, created folder for the soVits apis
+
+commit dbc014c67030486139f5b86fecb369a7540bfdf9
+Author: wongyat88 <wongyat88123456@gmail.com>
+Date:   Thu Apr 17 16:14:31 2025 +0800
+
+    First Commit

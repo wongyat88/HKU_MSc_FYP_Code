@@ -15,3 +15,13 @@ small100
 /remove_vocal_on_video
 /backend/public/phase5_backup
 /backend/.env
+
+*.rar
+*.zip
+*.7z
+*.mp4
+*.srt
+
+/backend/app/models/createSrt.py
+/backend/temp
+

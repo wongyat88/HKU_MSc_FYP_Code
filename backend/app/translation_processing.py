@@ -105,24 +105,32 @@ def _process_translation_thread_by_ai(
         f"Calling AI translation service ...",
     )
 
-    # Create Prompt for translation
-    prompt = f"""
-Given you a JSON, get the key 'text' and do translation to {tgt_lang} (Close to spoken language as possible), then create a new key called "translated_text" to save the translated text. Also you need to accurately translate the `translated_text` while considering its context.
-Return the JSON with the new key "translated_text" added.
-```
-{json_data}
-```
-"""
-    print(prompt)
+    need_ai = True
 
-    response_data = call_llm_api(prompt)
+    # json_data = []
 
-    print(response_data)
+    if need_ai:
 
-    json_str = response_data
-    print(f"Extracted JSON: {json_str}")
-    try:
+        # Create Prompt for translation
+        prompt = f"""
+        Given you a JSON, get the key 'text' and do translation to {tgt_lang} (Close to spoken language as possible), then create a new key called "translated_text" to save the translated text. Also you need to accurately translate the `translated_text` while considering its context.
+        Return the JSON with the new key "translated_text" added.
+        ```
+        {json_data}
+        ```
+        """
+        print(prompt)
+
+        response_data = call_llm_api(prompt)
+
+        print(response_data)
+
+        json_str = response_data
+        print(f"Extracted JSON: {json_str}")
+
         json_data = json.loads(json_str)
+
+    try:
         save_result(json_data, output_json_path)
         update_status(
             api_status_path,
