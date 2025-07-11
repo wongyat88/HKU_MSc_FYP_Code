@@ -7,217 +7,136 @@
                 "id": 1,
                 "speaker": "SPEAKER_00",
                 "start_time": 0.03096875,
-                "end_time": 3.00096875,
-                "duration": 2.97,
+                "end_time": 3.40596875,
+                "duration": 3.375,
                 "file_path": "SPEAKER\\SPEAKER_00_1.wav",
-                "text": "\u6559\u80b2\u90e85\u670828\u53f7\u516c\u5e03\u4e86\u3002"
+                "text": "President elect donald Trump, welcome back to meet the press."
             },
             {
                 "id": 2,
-                "speaker": "SPEAKER_00",
-                "start_time": 3.4397187500000004,
-                "end_time": 7.7428437500000005,
-                "duration": 4.303125,
-                "file_path": "SPEAKER\\SPEAKER_00_2.wav",
-                "text": "\u4eca\u5e74\u4e2d\u56fd\u9ad8\u8003\u62a5\u540d\u4eba\u6570\u662f1335\u4e07\u3002"
+                "speaker": "SPEAKER_02",
+                "start_time": 3.40596875,
+                "end_time": 4.469093750000001,
+                "duration": 1.0631250000000008,
+                "file_path": "SPEAKER\\SPEAKER_02_2.wav",
+                "text": "Thank you very much."
             },
             {
                 "id": 3,
                 "speaker": "SPEAKER_00",
-                "start_time": 8.265968750000003,
-                "end_time": 10.88159375,
-                "duration": 2.615624999999998,
+                "start_time": 4.755968750000001,
+                "end_time": 13.51409375,
+                "duration": 8.758125,
                 "file_path": "SPEAKER\\SPEAKER_00_3.wav",
-                "text": "\u6bd4\u53bb\u5e74\u4e0b\u964d\u4e867\u4e07\u4eba\u3002"
+                "text": "Thank you so much for being here. You are the first president since grover Cleveland to win non consecutive terms."
             },
             {
                 "id": 4,
-                "speaker": "SPEAKER_00",
-                "start_time": 11.590343750000002,
-                "end_time": 14.30721875,
-                "duration": 2.716874999999998,
-                "file_path": "SPEAKER\\SPEAKER_00_4.wav",
-                "text": "\u8fd9\u662f1\u5e74\u6765\u9ad8\u8003\u4eba\u6570\u7684\u7b2c\u4e00\u6b21\u4e0b\u964d\u3002"
+                "speaker": "SPEAKER_01",
+                "start_time": 13.446593750000002,
+                "end_time": 14.05409375,
+                "duration": 0.6074999999999982,
+                "file_path": "SPEAKER\\SPEAKER_01_4.wav",
+                "text": "Mmhm.\ud83d\ude0a"
             },
             {
                 "id": 5,
                 "speaker": "SPEAKER_00",
-                "start_time": 15.015968750000003,
-                "end_time": 18.57659375,
-                "duration": 3.560624999999998,
+                "start_time": 14.05409375,
+                "end_time": 16.19721875,
+                "duration": 2.1431250000000013,
                 "file_path": "SPEAKER\\SPEAKER_00_5.wav",
-                "text": "\u5728\u8fc7\u53bb\u5341\u5e74\u5f53\u4e2d\uff0c2015\u5e74\u52302017\u5e74\u3002"
+                "text": "Republicans now have control."
             },
             {
                 "id": 6,
                 "speaker": "SPEAKER_00",
-                "start_time": 19.184093750000002,
-                "end_time": 23.082218750000003,
-                "duration": 3.8981250000000003,
+                "start_time": 16.450343750000002,
+                "end_time": 17.41221875,
+                "duration": 0.9618749999999991,
                 "file_path": "SPEAKER\\SPEAKER_00_6.wav",
-                "text": "\u4e2d\u56fd\u9ad8\u8003\u7684\u4eba\u6570\u4fdd\u6301\u5728940\u4e07\u5de6\u53f3\u3002"
+                "text": "Of the house."
             },
             {
                 "id": 7,
                 "speaker": "SPEAKER_00",
-                "start_time": 24.06096875,
-                "end_time": 25.95096875,
-                "duration": 1.8900000000000006,
+                "start_time": 17.496593750000002,
+                "end_time": 18.42471875,
+                "duration": 0.9281249999999979,
                 "file_path": "SPEAKER\\SPEAKER_00_7.wav",
-                "text": "\u4ece2018\u5e74\u59cb\u4e0a\u5347\u3002"
+                "text": "And the Senate."
             },
             {
                 "id": 8,
-                "speaker": "SPEAKER_00",
-                "start_time": 26.10284375,
-                "end_time": 28.44846875,
-                "duration": 2.3456249999999983,
-                "file_path": "SPEAKER\\SPEAKER_00_8.wav",
-                "text": "\u554a\uff0c2018\u5e74\u5347\u5230975\u4e07\u3002"
+                "speaker": "SPEAKER_01",
+                "start_time": 18.45846875,
+                "end_time": 18.762218750000002,
+                "duration": 0.30375000000000085,
+                "file_path": "SPEAKER\\SPEAKER_01_8.wav",
+                "text": ""
             },
             {
                 "id": 9,
                 "speaker": "SPEAKER_00",
-                "start_time": 28.75221875,
-                "end_time": 30.28784375,
-                "duration": 1.5356249999999996,
+                "start_time": 18.762218750000002,
+                "end_time": 22.49159375,
+                "duration": 3.7293749999999974,
                 "file_path": "SPEAKER\\SPEAKER_00_9.wav",
-                "text": "\u7136\u5f8c\u5c31\u7a33\u7a33\u6b65\u7684\u3002"
+                "text": "What do you plan to accomplish in your first 100 days in office?"
             },
             {
                 "id": 10,
-                "speaker": "SPEAKER_00",
-                "start_time": 30.794093750000002,
-                "end_time": 33.05534375,
-                "duration": 2.261249999999997,
-                "file_path": "SPEAKER\\SPEAKER_00_10.wav",
-                "text": "\u53bb\u5e74\u662f1342\u4e07\u3002"
+                "speaker": "SPEAKER_02",
+                "start_time": 22.62659375,
+                "end_time": 32.19471875,
+                "duration": 9.568124999999998,
+                "file_path": "SPEAKER\\SPEAKER_02_10.wav",
+                "text": "Well, we're going to do something with the border and very strong, very powerful. That'll be our first signal and our first signal to America that we're not playing games."
             },
             {
                 "id": 11,
-                "speaker": "SPEAKER_00",
-                "start_time": 33.713468750000004,
-                "end_time": 34.860968750000005,
-                "duration": 1.1475000000000009,
-                "file_path": "SPEAKER\\SPEAKER_00_11.wav",
-                "text": "\u5386\u53f2\u6700\u9ad8\u8bb0\u5f55\u3002"
+                "speaker": "SPEAKER_02",
+                "start_time": 32.68409375,
+                "end_time": 47.66909375,
+                "duration": 14.985,
+                "file_path": "SPEAKER\\SPEAKER_02_11.wav",
+                "text": "People coming in by the millions, as you know, and a lot of people shouldn't be here. Most of them shouldn't be here, but we have jails being emptied into our country. We have mental institutions from all over the world being emptied into our country. So we'll be doing that. We're going to be."
             },
             {
                 "id": 12,
-                "speaker": "SPEAKER_00",
-                "start_time": 35.35034375,
-                "end_time": 36.59909375,
-                "duration": 1.2487500000000011,
-                "file_path": "SPEAKER\\SPEAKER_00_12.wav",
-                "text": "\u4eca\u5e74\u5f00\u59cb\u56de\u843d\u3002"
+                "speaker": "SPEAKER_02",
+                "start_time": 47.837843750000005,
+                "end_time": 49.947218750000005,
+                "duration": 2.109375,
+                "file_path": "SPEAKER\\SPEAKER_02_12.wav",
+                "text": "Extending within that period, or."
             },
             {
                 "id": 13,
-                "speaker": "SPEAKER_00",
-                "start_time": 36.80159375,
-                "end_time": 37.05471875,
-                "duration": 0.25312499999999716,
-                "file_path": "SPEAKER\\SPEAKER_00_13.wav",
-                "text": "\u554a\u3002"
+                "speaker": "SPEAKER_02",
+                "start_time": 50.38596875,
+                "end_time": 52.984718750000006,
+                "duration": 2.5987500000000026,
+                "file_path": "SPEAKER\\SPEAKER_02_13.wav",
+                "text": "As soon as we can, the Trump tax cuts."
             },
             {
                 "id": 14,
-                "speaker": "SPEAKER_00",
-                "start_time": 37.594718750000006,
-                "end_time": 39.940343750000004,
-                "duration": 2.3456249999999983,
-                "file_path": "SPEAKER\\SPEAKER_00_14.wav",
-                "text": "\u90a3\u4e48\u4eca\u5e74\u9ad8\u8003\u4eba\u6570\u548c\u3002"
+                "speaker": "SPEAKER_02",
+                "start_time": 53.507843750000006,
+                "end_time": 57.05159375,
+                "duration": 3.5437499999999957,
+                "file_path": "SPEAKER\\SPEAKER_02_14.wav",
+                "text": "Because you know they're coming due and they're very substantial for people."
             },
             {
                 "id": 15,
-                "speaker": "SPEAKER_00",
-                "start_time": 40.446593750000005,
-                "end_time": 42.80909375,
-                "duration": 2.362499999999997,
-                "file_path": "SPEAKER\\SPEAKER_00_15.wav",
-                "text": "18\u5e74\u524d\u7684\u51fa\u751f\u4eba\u6570\u3002"
-            },
-            {
-                "id": 16,
-                "speaker": "SPEAKER_00",
-                "start_time": 42.94409375,
-                "end_time": 43.95659375,
-                "duration": 1.0125000000000028,
-                "file_path": "SPEAKER\\SPEAKER_00_16.wav",
-                "text": "\u5bc6\u5207\u76f8\u5173\u3002"
-            },
-            {
-                "id": 17,
-                "speaker": "SPEAKER_00",
-                "start_time": 45.424718750000004,
-                "end_time": 46.48784375,
-                "duration": 1.0631249999999994,
-                "file_path": "SPEAKER\\SPEAKER_00_17.wav",
-                "text": "\u90a3\u4e48\u4e5f\u5c31\u662f\u8bf4\u3002"
-            },
-            {
-                "id": 18,
-                "speaker": "SPEAKER_00",
-                "start_time": 47.02784375,
-                "end_time": 50.01471875,
-                "duration": 2.9868749999999977,
-                "file_path": "SPEAKER\\SPEAKER_00_18.wav",
-                "text": "2025\u5e74\u53c2\u52a0\u9ad8\u8003\u7684\u5b66\u751f\u3002"
-            },
-            {
-                "id": 19,
-                "speaker": "SPEAKER_00",
-                "start_time": 50.487218750000004,
-                "end_time": 52.76534375,
-                "duration": 2.2781249999999957,
-                "file_path": "SPEAKER\\SPEAKER_00_19.wav",
-                "text": "\u5e94\u8be5\u662f2006\u5e74\u51fa\u751f\u3002"
-            },
-            {
-                "id": 20,
-                "speaker": "SPEAKER_00",
-                "start_time": 52.96784375,
-                "end_time": 55.16159375,
-                "duration": 2.1937500000000014,
-                "file_path": "SPEAKER\\SPEAKER_00_20.wav",
-                "text": "2006\u5e74\u51fa\u751f\u7684\u4eba\u53e3\u3002"
-            },
-            {
-                "id": 21,
-                "speaker": "SPEAKER_00",
-                "start_time": 55.49909375,
-                "end_time": 57.304718750000006,
-                "duration": 1.8056250000000063,
-                "file_path": "SPEAKER\\SPEAKER_00_21.wav",
-                "text": "\u662f1581\u4e07\u3002"
-            },
-            {
-                "id": 22,
-                "speaker": "SPEAKER_00",
-                "start_time": 58.21596875,
-                "end_time": 60.13971875,
-                "duration": 1.9237499999999983,
-                "file_path": "SPEAKER\\SPEAKER_00_22.wav",
-                "text": "06\u5e74\u6bd405\u5e74\u3002"
-            },
-            {
-                "id": 23,
-                "speaker": "SPEAKER_00",
-                "start_time": 60.595343750000005,
-                "end_time": 61.72596875000001,
-                "duration": 1.130625000000002,
-                "file_path": "SPEAKER\\SPEAKER_00_23.wav",
-                "text": "\u5c11\u4e8640\u4e07\u3002"
-            },
-            {
-                "id": 24,
-                "speaker": "SPEAKER_00",
-                "start_time": 62.43471875,
-                "end_time": 66.77159375000001,
-                "duration": 4.336875000000006,
-                "file_path": "SPEAKER\\SPEAKER_00_24.wav",
-                "text": "\u8fd9\u5c31\u662f\u4e3a\u4ec0\u4e48\u9ad8\u8003\u751f\u5c11\u4e867\u4e07\uff0c\u7684\u80cc\u540e\u7684\u539f\u56e0\u5c31\u662f\u8fd9\u4e2a\u3002"
+                "speaker": "SPEAKER_02",
+                "start_time": 57.540968750000005,
+                "end_time": 65.59034375,
+                "duration": 8.049374999999998,
+                "file_path": "SPEAKER\\SPEAKER_02_15.wav",
+                "text": "It would be very, I think we will anger a lot of people, frankly, if we don't get an extension of that, that's what led us to one of the greatest economies ever."
             }
         ]
     },
@@ -242,8 +161,8 @@
         "data": {}
     },
     "phase6": {
-        "is_complete": true,
-        "message": "Generating Completed",
+        "is_complete": false,
+        "message": "Start lip sync on SPEAKER_02 ...",
         "data": {}
     },
     "ai_check": {
@@ -256,17 +175,18 @@
         "message": "Audio combination complete",
         "data": {
             "new_segment": {
-                "id": 31,
-                "speaker": "SPEAKER_01",
-                "start_time": 13.21034375,
-                "end_time": 15.57284375,
-                "duration": 2.345625000000002,
-                "file_path": "SPEAKER\\SPEAKER_01_31.wav",
-                "text": "Mint and papaya collection."
+                "id": 16,
+                "speaker": "SPEAKER_00",
+                "start_time": 14.05409375,
+                "end_time": 18.42471875,
+                "duration": 4.033124999999998,
+                "file_path": "SPEAKER\\SPEAKER_00_16.wav",
+                "text": "Republicans now have control of the house and the senate."
             },
             "removed_segments": [
-                10,
-                11
+                5,
+                6,
+                7
             ]
         }
     }

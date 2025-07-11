@@ -12,15 +12,17 @@
 4. Download Node.js for version 22 LTS on Windows
 5. Prepare a GPU for running the project. NVIDA GPU is reqired and CUDA version 11.8 is required for the project to run.
 6. Activate the conda environment and CD to the backend folder and run `pip install -r requirements.txt` to install the backend dependencies.
-7. CD to the frontend folder and run `npm install` to install the frontend dependencies.
-8. CD to backend folder and run `python test_gpu.py` to check if the GPU is working properly.
-9. Go to `https://github.com/RVC-Boss/GPT-SoVITS/releases/tag/20250228v3` to download the GPT SoVits 20250228 v3 Repo for the project. It is a zip file, extract it to the backend folder.
-10. Unzip the `wav2lip.zip` file to the backend folder. Then go to `https://drive.google.com/file/d/15G3U08c8xsCkOqQxE38Z2XXDnPcOptNk/view` to download the models files and place it in the `wav2lip` root folder.
-11. Go to the folder `soVits_replace` and copy all the files and paste it to the donwloaded `GPT-SoVits` folder, replace all the existing folder.
-12. Apply an account on Hugging Face and login using the command `huggingface-cli login` in the terminal. You need to create a token with `FINEGRAINED` access and save it.
-13. Go to `https://huggingface.co/pyannote/speaker-diarization` with the same account and request for the access to the model. IF NOT DO THAT, THE DIARIZATION WILL NOT WORK.
-14. Go to `https://huggingface.co/FunAudioLLM/SenseVoiceSmall` with the same account and request for the access to the model. Also, download the model and place it in the `backend/app/models` folder.
-15. Go the backend folder, open and update the `.env` file with the content, here are some example values:
+7. Then install the Torch and Torchvision with the command `pip install torch==2.1.0+cu118 torchvision==0.16.0+cu118 torchaudio==2.1.0 --index-url https://download.pytorch.org/whl/cu118` to install the GPU version of PyTorch.
+    - If you have a different CUDA version, please refer to the [PyTorch installation guide](https://pytorch.org/get-started/locally/) for the correct command.
+8. CD to the frontend folder and run `npm install` to install the frontend dependencies.
+9. CD to backend folder and run `python test_gpu.py` to check if the GPU is working properly.
+10. Go to `https://github.com/RVC-Boss/GPT-SoVITS/releases/tag/20250228v3` to download the GPT SoVits 20250228 v3 Repo for the project. It is a zip file, extract it to the backend folder.
+11. Unzip the `wav2lip.zip` file to the backend folder. Then go to `https://drive.google.com/file/d/15G3U08c8xsCkOqQxE38Z2XXDnPcOptNk/view` to download the models files and place it in the `wav2lip` root folder.
+12. Go to the folder `soVits_replace` and copy all the files and paste it to the donwloaded `GPT-SoVits` folder, replace all the existing folder.
+13. Apply an account on Hugging Face and login using the command `huggingface-cli login` in the terminal. You need to create a token with `FINEGRAINED` access and save it.
+14. Go to `https://huggingface.co/pyannote/speaker-diarization` with the same account and request for the access to the model. IF NOT DO THAT, THE DIARIZATION WILL NOT WORK.
+15. Go to `https://huggingface.co/FunAudioLLM/SenseVoiceSmall` with the same account and request for the access to the model. Also, download the model and place it in the `backend/app/models` folder.
+16. Go the backend folder, open and update the `.env` file with the content, here are some example values:
 
 ```
 # .env
