@@ -32,6 +32,7 @@ from .audio_processing import (
     process_delete_audio,
     process_save_segments,
     process_video,
+    process_preprogessing,
 )
 
 SOVITS_SERVER = config("SOVITS_SERVER")
@@ -257,7 +258,6 @@ async def save_phase2(data: dict = Body(...)):
             logger.error("Save list is empty")
             raise HTTPException(status_code=400, detail="Save list is empty")
 
-        # Process saving the segments (this function should be implemented in your audio_processing module)
         process_save_segments(save_list, PHASE2_DIR)
 
         # Process translation
@@ -284,6 +284,7 @@ async def save_phase2(data: dict = Body(...)):
             json_data,
             API_STATUS_PATH,
             output_json_path,
+            PHASE1_DIR,
         )
 
         return {"message": "Translation Processing started."}

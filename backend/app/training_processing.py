@@ -33,13 +33,6 @@ def process_training(input_path, phase3_dir, api_status_path):
 
 
 def _process_training_thread(input_path, phase3_dir, api_status_path):
-    folder_path = os.path.join(input_path, "SPEAKER_PROCESSED_DENOISE_ASR_PREPROCESS")
-
-    # Check if the folder exists
-    if not os.path.exists(folder_path):
-        print(f"Folder {folder_path} does not exist.")
-        return
-
     # Read the speaker_list.json to get the list of speakers
     speaker_list_path = os.path.join(input_path, "speaker_list.json")
     if not os.path.exists(speaker_list_path):
@@ -103,6 +96,13 @@ def _process_training_thread(input_path, phase3_dir, api_status_path):
                 f"Start Training SoVits Model for {speaker} ...",
             )
 
+            folder_path = os.path.join(
+                input_path,
+                "SPEAKER_DATASET",
+                speaker,
+                "SPEAKER_PROCESSED_DENOISE_ASR_PREPROCESS",
+            )
+
             returnData = {
                 "batch_size": 1,  # 1/2/5/8/12/14
                 "epoch": 4,
@@ -116,7 +116,8 @@ def _process_training_thread(input_path, phase3_dir, api_status_path):
                 "pretrained_s2D": "gsv-v2final-pretrained/s2G2333k.pth",
                 "if_grad_ckpt": False,
                 "lora_rank": 32,
-                "opt_dir": os.path.join(folder_path, speaker),
+                # "opt_dir": os.path.join(folder_path, speaker),
+                "opt_dir": folder_path,
             }
 
             # Send the request to the server
@@ -152,6 +153,13 @@ def _process_training_thread(input_path, phase3_dir, api_status_path):
         now_str = str(int(now.timestamp()))
 
         model_name[speaker]["gpt"] = speaker + "_gpt_" + now_str + "2"
+
+        folder_path = os.path.join(
+            input_path,
+            "SPEAKER_DATASET",
+            speaker,
+            "SPEAKER_PROCESSED_DENOISE_ASR_PREPROCESS",
+        )
 
         # Loop all speaker to train the GPT models
         server_url = SOVITS_SERVER + "/training/gpt"
@@ -200,7 +208,8 @@ def _process_training_thread(input_path, phase3_dir, api_status_path):
                     "save_every_n_epoch": 5,
                     "gpu_numbers": "0",
                     "pretrained_s1": "gsv-v2final-pretrained/s1bert25hz-5kh-longer-epoch=12-step=369668.ckpt",
-                    "opt_dir": os.path.join(folder_path, speaker),
+                    # "opt_dir": os.path.join(folder_path, speaker),
+                    "opt_dir": folder_path,
                 },
             )
             response.raise_for_status()

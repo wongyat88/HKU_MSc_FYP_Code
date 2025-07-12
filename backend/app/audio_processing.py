@@ -224,6 +224,37 @@ def _process_video_thread(video_path, output_folder, api_status_path):
             )
             return
 
+        # * Should remove bg from the audio first
+        # Remove vocals from original wav file
+        update_status(
+            api_status_path,
+            "phase1",
+            False,
+            "Start Removing background sound from original audio ...",
+        )
+        """
+        demucs -d cuda test.mp3 --two-stems=vocals -o ./output_folder --filename "{stem}.{ext}"
+
+        # Use the `no_vocals.wav`, remind that there will be a sub-folder also created `htdemucs`
+        """
+        demucs_cmd = [
+            "demucs",
+            "-d",
+            "cuda",
+            audio_file,
+            "--two-stems=vocals",
+            "-o",
+            output_folder,
+            "--filename",
+            "{stem}.{ext}",
+        ]
+
+        # * Uncomment the following line to run the command
+        subprocess.run(demucs_cmd, check=True)
+
+        # Get the path to the no_vocals.wav file
+        audio_file = os.path.join(output_folder, "htdemucs", "vocals.wav")
+
         # Step 2: Perform speaker diarization
         update_status(
             api_status_path, "phase1", False, "Performing speaker diarization..."
@@ -246,192 +277,6 @@ def _process_video_thread(video_path, output_folder, api_status_path):
         transcriptions_path = os.path.join(output_folder, "transcriptions.json")
         with open(transcriptions_path, "w") as f:
             json.dump(speakers_data, f, indent=4)
-
-        # * New feature: Create Copy of the SPEAKER and prepare training data for SoVits
-        update_status(
-            api_status_path,
-            "phase1",
-            False,
-            "Creating Dataset for SoVits... Slicing audio...",
-        )
-        # Step 3.1
-        """
-        1. Will set min length to process is 4 seconds, only audio less then 4s will pass
-        2. Need to update the JSON data after SoVits splitted the audio
-
-        slice_audio(inp="L:/MSCCS Project/GPT-SoVITS/Experimental/Temp/Input",
-                opt_root="L:/MSCCS Project/GPT-SoVITS/Experimental/Temp/1_slice_audio_out",
-                threshold=-34,
-                min_length=4000,
-                min_interval=300,
-                hop_size=10,
-                max_sil_kept=500,
-                _max=0.9,
-                alpha=0.25,
-                n_parts=4)
-        """
-        server_url = SOVITS_SERVER + "/training/slice_audio"
-        speaker_processed_folder = os.path.join(output_folder, "SPEAKER_PROCESSED")
-        recreate_folder(speaker_processed_folder)
-        try:
-            returnData = {
-                "inp": output_folder + "/SPEAKER",
-                "opt_root": output_folder + "/SPEAKER_PROCESSED",
-                "threshold": -34,
-                "min_length": 4000,
-                "min_interval": 300,
-                "hop_size": 10,
-                "max_sil_kept": 500,
-                "_max": 0.9,
-                "alpha": 0.25,
-                "n_parts": 4,
-            }
-            response = requests.post(
-                server_url,
-                # Change 'data' to 'json' to send a JSON payload
-                params=returnData,
-            )
-            response.raise_for_status()
-        except Exception as e:
-            update_status(api_status_path, "phase1", False, f"Error on slice: {str(e)}")
-            return
-
-        # Step 3.2: Do denoise on the processed audio
-        """
-        # Denoise
-        denoise(denoise_inp_dir="L:/MSCCS Project/GPT-SoVITS/Experimental/Temp/1_slice_audio_out",
-                denoise_opt_dir="L:/MSCCS Project/GPT-SoVITS/Experimental/Temp/2_denoise_out")
-        """
-        update_status(
-            api_status_path,
-            "phase1",
-            False,
-            "Creating Dataset for SoVits... Denoise audio...",
-        )
-        server_url = SOVITS_SERVER + "/training/denoise"
-        try:
-            response = requests.post(
-                server_url,
-                params={
-                    "denoise_inp_dir": output_folder + "/SPEAKER_PROCESSED",
-                    "denoise_opt_dir": output_folder + "/SPEAKER_PROCESSED_DENOISE",
-                },
-            )
-            response.raise_for_status()
-        except Exception as e:
-            update_status(
-                api_status_path, "phase1", False, f"Error on denoise: {str(e)}"
-            )
-            return
-
-        # Step 3.4: Process to seperate audio on different speaker
-        """
-        Loop though output_folder + "/SPEAKER_PROCESSED_DENOISE", find out how many speakers exist and group them in one folder based on the speaker name
-        The first 10 Characters of the file name is the speaker name, so we can use it to group them
-        """
-        SPEAKER_LIST = set()
-        # Get the list of files in the directory
-        files = os.listdir(output_folder + "/SPEAKER_PROCESSED_DENOISE")
-        for file in files:
-            # Extract the speaker name from the file name
-            speaker_name = file[:10]
-            # Create a folder for the speaker if it doesn't exist
-            speaker_folder = os.path.join(
-                output_folder, "SPEAKER_PROCESSED_DENOISE", speaker_name
-            )
-            if not os.path.exists(speaker_folder):
-                os.makedirs(speaker_folder)
-            # Move the file to the speaker's folder
-            source_path = os.path.join(output_folder, "SPEAKER_PROCESSED_DENOISE", file)
-            dest_path = os.path.join(speaker_folder, file)
-            os.rename(source_path, dest_path)
-
-            SPEAKER_LIST.add(speaker_name)
-
-        for speaker in SPEAKER_LIST:
-            # Step 3.4: Do ASR on the processed audio (Grouped by speaker)
-            """
-            open_asr(asr_inp_dir="L:/MSCCS Project/GPT-SoVITS/Experimental/Temp/2_denoise_out",
-                asr_opt_dir="L:/MSCCS Project/GPT-SoVITS/Experimental/Temp/3_asr_out",
-                asr_model="Faster Whisper (多语种)",
-                asr_model_size="large-v3",
-                asr_lang="auto",
-                asr_precision="int8")
-            """
-            update_status(
-                api_status_path,
-                "phase1",
-                False,
-                "Creating Dataset for SoVits... Preprocessing audio on ASR... "
-                + speaker,
-            )
-            server_url = SOVITS_SERVER + "/training/asr"
-            try:
-                response = requests.post(
-                    server_url,
-                    params={
-                        "asr_inp_dir": f"{output_folder}\\SPEAKER_PROCESSED_DENOISE\\{speaker}",
-                        "asr_opt_dir": f"{output_folder}\\SPEAKER_PROCESSED_DENOISE_ASR\\{speaker}",
-                        "asr_model": "Faster Whisper (多语种)",
-                        "asr_model_size": "large-v3",
-                        "asr_lang": "auto",
-                        "asr_precision": "int8",
-                    },
-                )
-                response.raise_for_status()
-            except Exception as e:
-                update_status(
-                    api_status_path, "phase1", False, f"Error on ASR: {str(e)}"
-                )
-                return
-
-            # Step 3.5: Preprocess the ASR output to .list for training
-            """
-            preprocess_one_step(inp_text="L:/MSCCS Project/GPT-SoVITS/Experimental/Temp/3_asr_out/2_denoise_out.list",
-                        inp_wav_dir="L:/MSCCS Project/GPT-SoVITS/Experimental/Temp/2_denoise_out",
-                        exp_name="20250409_Test",
-                        gpu_numbers1a="0-0",
-                        gpu_numbers1Ba="0-0",
-                        gpu_numbers1c="0-0",
-                        bert_pretrained_dir="L:/MSCCS Project/GPT-SoVITS/GPT_SoVITS/pretrained_models/chinese-roberta-wwm-ext-large",
-                        ssl_pretrained_dir="L:/MSCCS Project/GPT-SoVITS/GPT_SoVITS/pretrained_models/chinese-hubert-base",
-                        pretrained_s2G_path="L:/MSCCS Project/GPT-SoVITS/GPT_SoVITS/pretrained_models/gsv-v2final-pretrained/s2G2333k.pth",
-                        opt_dir="L:/MSCCS Project/GPT-SoVITS/Experimental/Temp/20250409_Test")
-            """
-            update_status(
-                api_status_path,
-                "phase1",
-                False,
-                "Creating Dataset for SoVits... Preprocessing audio to list..."
-                + speaker,
-            )
-            server_url = SOVITS_SERVER + "/training/preprocess"
-            try:
-                response = requests.post(
-                    server_url,
-                    params={
-                        # ! The list name is same as the output folder name
-                        "inp_text": f"{output_folder}\\SPEAKER_PROCESSED_DENOISE_ASR\\{speaker}\\{speaker}.list",
-                        "inp_wav_dir": f"{output_folder}\\SPEAKER_PROCESSED_DENOISE\\{speaker}",
-                        "exp_name": "SPEAKER",
-                        "gpu_numbers1a": "0-0",
-                        "gpu_numbers1Ba": "0-0",
-                        "gpu_numbers1c": "0-0",
-                        "bert_pretrained_dir": "chinese-roberta-wwm-ext-large",
-                        "ssl_pretrained_dir": "chinese-hubert-base",
-                        "pretrained_s2G_path": "gsv-v2final-pretrained/s2G2333k.pth",
-                        "opt_dir": f"{output_folder}\\SPEAKER_PROCESSED_DENOISE_ASR_PREPROCESS\\{speaker}",
-                    },
-                )
-                response.raise_for_status()
-            except Exception as e:
-                update_status(
-                    api_status_path,
-                    "phase1",
-                    False,
-                    f"Error on preprocess: {str(e)}",
-                )
-                return
 
         # Step 4: Transcribe each audio segment
         update_status(
@@ -756,3 +601,275 @@ def process_save_segments(data, output_folder):
     except Exception as e:
         print(f"Error saving segments: {e}")
         raise Exception(f"Error saving segments: {e}")
+
+
+def process_preprogessing(phase1_path, data_json_path, api_status_path):
+    """Main function to process a video file in a separate thread"""
+    # Start a thread to process the video asynchronously
+    thread = threading.Thread(
+        target=_process_data_preprogessing,
+        args=(phase1_path, data_json_path, api_status_path),
+    )
+    thread.daemon = True
+    thread.start()
+
+
+def _process_data_preprogessing(output_folder, data_json_path, api_status_path):
+    # * New feature: Create Copy of the SPEAKER and prepare training data for SoVits
+    update_status(
+        api_status_path,
+        "phase2",
+        False,
+        "Creating Dataset for SoVits... Slicing audio...",
+    )
+    """
+    ! New Idea:
+    - Copy all the content on "SPEAKER" to new folder name "SPEAKER_DATASET"
+    - Combine them based on speaker name via the json data
+    """
+
+    # Set a default speaker list if needed (example: two speakers)
+    speaker_list = {"SPEAKER_00", "SPEAKER_01"}
+
+    with open(data_json_path, "r", encoding="utf-8") as f:
+        segments = json.load(f)
+
+    # Avoid crashing, copy all the content on "SPEAKER" to new folder name "SPEAKER_DATASET"
+    speaker_dataset_folder = os.path.join(output_folder, "SPEAKER_DATASET")
+    recreate_folder(speaker_dataset_folder)
+    # Copy all files from SPEAKER to SPEAKER_DATASET
+    speaker_folder = os.path.join(output_folder, "SPEAKER")
+    if os.path.exists(speaker_folder):
+        for file in os.listdir(speaker_folder):
+            source_path = os.path.join(speaker_folder, file)
+            dest_path = os.path.join(speaker_dataset_folder, file)
+            if os.path.isfile(source_path):
+                # Copy the file to the new folder
+                with open(source_path, "rb") as src_file:
+                    with open(dest_path, "wb") as dst_file:
+                        dst_file.write(src_file.read())
+    else:
+        update_status(
+            api_status_path,
+            "phase2",
+            False,
+            "No SPEAKER folder found in the output directory.",
+        )
+        return
+
+    # Create folder for each speaker, and move the audio to the corresponding folder
+    for segment in segments:
+        segment["file_path"] = segment["file_path"].replace("SPEAKER\\", "")
+        speaker_name = segment["speaker"]
+        speaker_folder = os.path.join(speaker_dataset_folder, speaker_name)
+        if not os.path.exists(speaker_folder):
+            os.makedirs(speaker_folder)
+
+        # Move the audio file to the corresponding speaker folder
+        source_path = os.path.join(speaker_dataset_folder, segment["file_path"])
+        dest_path = os.path.join(speaker_folder, f"{segment['id']}.wav")
+        if os.path.exists(source_path):
+            os.rename(source_path, dest_path)
+
+    # Merge all audio into one wav on each speaker folder
+    speaker_list = set()
+    for speaker in os.listdir(speaker_dataset_folder):
+        speaker_folder = os.path.join(speaker_dataset_folder, speaker)
+        speaker_list.add(speaker)
+        if os.path.isdir(speaker_folder):
+            # Create a list to hold the audio segments
+            audio_segments = []
+            for file in os.listdir(speaker_folder):
+                if file.endswith(".wav"):
+                    file_path = os.path.join(speaker_folder, file)
+                    audio_segments.append(AudioSegment.from_wav(file_path))
+
+            # Combine all audio segments into one
+            if audio_segments:
+                # combined_audio = sum(audio_segments)
+                silence = AudioSegment.silent(duration=500)  # 500ms of silence
+                combined_audio = audio_segments[0]
+
+                for segment in audio_segments[1:]:
+                    combined_audio += silence + segment
+                combined_audio.export(
+                    os.path.join(speaker_folder, f"{speaker}.wav"), format="wav"
+                )
+
+                # Remove individual audio files after merging
+                for file in os.listdir(speaker_folder):
+                    if file.endswith(".wav") and file != f"{speaker}.wav":
+                        os.remove(os.path.join(speaker_folder, file))
+
+    # * Now, you should have 1 wav file for each speaker in the SPEAKER_DATASET folder
+
+    for speaker in speaker_list:
+        # Step 1: Pass merged audio to SoVits for slicing
+        """
+        1. Will set min length to process is 4 seconds, only audio less then 4s will pass
+        But the audio must be longer than 4s as already merged
+        2. Need to update the JSON data after SoVits splitted the audio
+
+        slice_audio(inp="L:/MSCCS Project/GPT-SoVITS/Experimental/Temp/Input",
+                opt_root="L:/MSCCS Project/GPT-SoVITS/Experimental/Temp/1_slice_audio_out",
+                threshold=-34,
+                min_length=4000,
+                min_interval=300,
+                hop_size=10,
+                max_sil_kept=500,
+                _max=0.9,
+                alpha=0.25,
+                n_parts=4)
+        """
+        speaker_sp_output_folder = os.path.join(
+            output_folder, "SPEAKER_DATASET", speaker
+        )
+        server_url = SOVITS_SERVER + "/training/slice_audio"
+        process_folder = os.path.join(speaker_sp_output_folder, "SPEAKER_PROCESSED")
+        recreate_folder(process_folder)
+        try:
+            returnData = {
+                "inp": speaker_sp_output_folder,
+                "opt_root": process_folder,
+                "threshold": -34,
+                "min_length": 4000,
+                "min_interval": 300,
+                "hop_size": 10,
+                "max_sil_kept": 500,
+                "_max": 0.9,
+                "alpha": 0.25,
+                "n_parts": 4,
+            }
+            response = requests.post(
+                server_url,
+                # Change 'data' to 'json' to send a JSON payload
+                params=returnData,
+            )
+            response.raise_for_status()
+        except Exception as e:
+            update_status(api_status_path, "phase2", False, f"Error on slice: {str(e)}")
+            return
+
+        # Step 3.2: Do denoise on the processed audio
+        """
+            # Denoise
+            denoise(denoise_inp_dir="L:/MSCCS Project/GPT-SoVITS/Experimental/Temp/1_slice_audio_out",
+                    denoise_opt_dir="L:/MSCCS Project/GPT-SoVITS/Experimental/Temp/2_denoise_out")
+        """
+        update_status(
+            api_status_path,
+            "phase2",
+            False,
+            "Creating Dataset for SoVits... Denoise audio...",
+        )
+        server_url = SOVITS_SERVER + "/training/denoise"
+        try:
+            response = requests.post(
+                server_url,
+                params={
+                    "denoise_inp_dir": process_folder,
+                    "denoise_opt_dir": speaker_sp_output_folder
+                    + "/SPEAKER_PROCESSED_DENOISE",
+                },
+            )
+            response.raise_for_status()
+        except Exception as e:
+            update_status(
+                api_status_path, "phase2", False, f"Error on denoise: {str(e)}"
+            )
+            return
+
+        # Step 3.4: Do ASR on the processed audio (Grouped by speaker)
+        """
+        open_asr(asr_inp_dir="L:/MSCCS Project/GPT-SoVITS/Experimental/Temp/2_denoise_out",
+            asr_opt_dir="L:/MSCCS Project/GPT-SoVITS/Experimental/Temp/3_asr_out",
+            asr_model="Faster Whisper (多语种)",
+            asr_model_size="large-v3",
+            asr_lang="auto",
+            asr_precision="int8")
+        """
+        update_status(
+            api_status_path,
+            "phase2",
+            False,
+            "Creating Dataset for SoVits... Preprocessing audio on ASR... " + speaker,
+        )
+        server_url = SOVITS_SERVER + "/training/asr"
+        try:
+            response = requests.post(
+                server_url,
+                params={
+                    "asr_inp_dir": f"{speaker_sp_output_folder}\\SPEAKER_PROCESSED_DENOISE",
+                    "asr_opt_dir": f"{speaker_sp_output_folder}\\SPEAKER_PROCESSED_DENOISE_ASR",
+                    "asr_model": "Faster Whisper (多语种)",
+                    "asr_model_size": "large-v3",
+                    "asr_lang": "auto",
+                    "asr_precision": "int8",
+                },
+            )
+            response.raise_for_status()
+        except Exception as e:
+            update_status(api_status_path, "phase2", False, f"Error on ASR: {str(e)}")
+            return
+
+        # Step 3.5: Preprocess the ASR output to .list for training
+        """
+        preprocess_one_step(inp_text="L:/MSCCS Project/GPT-SoVITS/Experimental/Temp/3_asr_out/2_denoise_out.list",
+                    inp_wav_dir="L:/MSCCS Project/GPT-SoVITS/Experimental/Temp/2_denoise_out",
+                    exp_name="20250409_Test",
+                    gpu_numbers1a="0-0",
+                    gpu_numbers1Ba="0-0",
+                    gpu_numbers1c="0-0",
+                    bert_pretrained_dir="L:/MSCCS Project/GPT-SoVITS/GPT_SoVITS/pretrained_models/chinese-roberta-wwm-ext-large",
+                    ssl_pretrained_dir="L:/MSCCS Project/GPT-SoVITS/GPT_SoVITS/pretrained_models/chinese-hubert-base",
+                    pretrained_s2G_path="L:/MSCCS Project/GPT-SoVITS/GPT_SoVITS/pretrained_models/gsv-v2final-pretrained/s2G2333k.pth",
+                    opt_dir="L:/MSCCS Project/GPT-SoVITS/Experimental/Temp/20250409_Test")
+        """
+        update_status(
+            api_status_path,
+            "phase2",
+            False,
+            "Creating Dataset for SoVits... Preprocessing audio to list..." + speaker,
+        )
+        server_url = SOVITS_SERVER + "/training/preprocess"
+        try:
+            response = requests.post(
+                server_url,
+                params={
+                    # ! The list name is same as the output folder name
+                    "inp_text": f"{speaker_sp_output_folder}\\SPEAKER_PROCESSED_DENOISE_ASR\\SPEAKER_PROCESSED_DENOISE.list",
+                    "inp_wav_dir": f"{speaker_sp_output_folder}\\SPEAKER_PROCESSED_DENOISE",
+                    "exp_name": "SPEAKER",
+                    "gpu_numbers1a": "0-0",
+                    "gpu_numbers1Ba": "0-0",
+                    "gpu_numbers1c": "0-0",
+                    "bert_pretrained_dir": "chinese-roberta-wwm-ext-large",
+                    "ssl_pretrained_dir": "chinese-hubert-base",
+                    "pretrained_s2G_path": "gsv-v2final-pretrained/s2G2333k.pth",
+                    "opt_dir": f"{speaker_sp_output_folder}\\SPEAKER_PROCESSED_DENOISE_ASR_PREPROCESS",
+                },
+            )
+            response.raise_for_status()
+
+            update_status(
+                api_status_path,
+                "phase2",
+                False,
+                f"Completed preprocessing for speaker: {speaker}",
+            )
+        except Exception as e:
+            update_status(
+                api_status_path,
+                "phase2",
+                False,
+                f"Error on preprocess: {str(e)}",
+            )
+            return
+
+    # Step 4: Completed
+    update_status(
+        api_status_path,
+        "phase2",
+        True,
+        f"Completed preprocessing for all speaker",
+    )

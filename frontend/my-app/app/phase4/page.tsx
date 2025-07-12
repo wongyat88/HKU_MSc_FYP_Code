@@ -246,7 +246,8 @@ const Page = (props: Props) => {
     }
 
     const handleToPhase5 = () => {
-        router.push('/phase5')
+        // router.push('/phase5')
+        window.location.href = '/phase5'
     }
 
     if (!modeList) return <div className="p-4 dark:text-white">Loading model list...</div>

@@ -93,8 +93,8 @@ const AudioCard: React.FC<AudioCardProps> = ({
                         className="w-full"
                         defaultSelectedKeys={[item.speaker]}
                         aria-label="Select speaker"
-                        onChange={(key) =>
-                            onSpeakerChange && onSpeakerChange(index, key.toString())
+                        onChange={(key: any) =>
+                            onSpeakerChange && onSpeakerChange(index, key.target.value)
                         }>
                         {speakers.map((speaker) => (
                             <SelectItem key={speaker}>{speaker}</SelectItem>

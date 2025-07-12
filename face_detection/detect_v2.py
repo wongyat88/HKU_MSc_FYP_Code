@@ -273,27 +273,101 @@ def detect(
 
 
 def predict(faces_crop, n_speakers):
-    def train_pca(embeddings):
+    # def train_pca(embeddings):
+    #     from sklearn.decomposition import PCA
+
+    #     embeddings = embeddings.astype("float32")
+    #     pca_model = PCA(n_components=2)
+    #     pca_model.fit(embeddings)
+    #     pca_components = pca_model.transform(embeddings)
+    #     # plt.figure(dpi=1000)
+    #     # plt.scatter(list(pca_components[:,0]), list(pca_components[:,1]), marker='x', s=0.5)
+    #     # plt.show()
+    #     return pca_components
+
+    def train_pca(embeddings, n_components_ratio=0.95):
         from sklearn.decomposition import PCA
 
         embeddings = embeddings.astype("float32")
-        pca_model = PCA(n_components=2)
+
+        # Use more components to retain more information
+        n_components = min(50, embeddings.shape[1])  # Use up to 50 components
+        pca_model = PCA(n_components=n_components)
+        pca_model.fit(embeddings)
+
+        # Find number of components that explain n_components_ratio of variance
+        cumsum_ratio = np.cumsum(pca_model.explained_variance_ratio_)
+        n_components_optimal = np.argmax(cumsum_ratio >= n_components_ratio) + 1
+        n_components_optimal = max(2, min(n_components_optimal, 20))  # Between 2-20
+
+        # Refit with optimal components
+        pca_model = PCA(n_components=n_components_optimal)
         pca_model.fit(embeddings)
         pca_components = pca_model.transform(embeddings)
-        # plt.figure(dpi=1000)
-        # plt.scatter(list(pca_components[:,0]), list(pca_components[:,1]), marker='x', s=0.5)
-        # plt.show()
+
         return pca_components
 
-    def train_dbscan(components):
-        from sklearn.cluster import DBSCAN
+    # def train_dbscan(components):
+    #     from sklearn.cluster import DBSCAN
 
-        clustering = DBSCAN(eps=0.5, min_samples=30).fit(components)
-        y_pred = clustering.labels_  # model.predict(components)
-        # plt.figure(dpi=1000)
-        # plt.scatter(list(components[:,0]), list(components[:,1]), marker='x', s=0.5, c=y_pred)
-        # plt.show()
-        return y_pred
+    #     clustering = DBSCAN(eps=0.5, min_samples=30).fit(components)
+    #     y_pred = clustering.labels_  # model.predict(components)
+    #     # plt.figure(dpi=1000)
+    #     # plt.scatter(list(components[:,0]), list(components[:,1]), marker='x', s=0.5, c=y_pred)
+    #     # plt.show()
+    #     return y_pred
+
+    def train_dbscan(components, n_speakers, min_faces_per_speaker=10):
+        from sklearn.cluster import DBSCAN
+        from sklearn.cluster import KMeans
+
+        # Dynamic min_samples based on available data
+        total_faces = len(components)
+        min_samples = max(min_faces_per_speaker, total_faces // (n_speakers * 3))
+
+        # Try different eps values
+        eps_values = [0.3, 0.5, 0.7, 1.0, 1.5]
+        best_clustering = None
+        best_score = -1
+
+        for eps in eps_values:
+            clustering = DBSCAN(eps=eps, min_samples=min_samples).fit(components)
+            labels = clustering.labels_
+
+            # Count unique clusters (excluding noise -1)
+            unique_clusters = len(set(labels)) - (1 if -1 in labels else 0)
+
+            print(
+                f"DBSCAN with eps={eps}: {unique_clusters} unique clusters, n_speakers={n_speakers}"
+            )
+
+            # Score: prefer clustering that gives close to n_speakers clusters
+            if unique_clusters > 0:
+                # score = 1 / abs(unique_clusters - n_speakers + 1)
+                # if score > best_score:
+                #     best_score = score
+                #     best_clustering = labels
+                # Fix division by zero error
+                diff = abs(unique_clusters - n_speakers)
+                if diff == 0:
+                    score = 1000  # Perfect match gets highest score
+                else:
+                    score = 1 / diff
+
+                if score > best_score:
+                    best_score = score
+                    best_clustering = labels
+
+        # Fallback to KMeans if DBSCAN fails
+        if (
+            best_clustering is None
+            or len(set(best_clustering)) - (1 if -1 in best_clustering else 0) < 2
+        ):
+            print("DBSCAN failed, falling back to KMeans")
+            kmeans = KMeans(n_clusters=n_speakers, random_state=42, n_init=10)
+            best_clustering = kmeans.fit_predict(components)
+
+        return best_clustering
 
     # facenet_pytorch
     from facenet_pytorch import InceptionResnetV1
@@ -315,7 +389,7 @@ def predict(faces_crop, n_speakers):
             embeddings = np.append(embeddings, np.array([embedding]), axis=0)
 
     pca_components = train_pca(embeddings)
-    prediction = train_dbscan(pca_components)
+    prediction = train_dbscan(pca_components, n_speakers)
 
     return prediction
 
@@ -444,6 +518,10 @@ def main(
     n_speakers,
     frame_store_path,
 ):
+    if os.path.exists(frame_store_path):
+        shutil.rmtree(frame_store_path)
+        print(f"Cleaned up temporary frame folder: {frame_store_path}")
+
     # Part 0 - Frame extraction with ffmpeg
     extract_frames_from_video(video_path, frame_store_path)
 

@@ -81,9 +81,10 @@ def _process_face_detection_thread(api_path, INPUT_DIR, phase1_dir, phase5_dir):
     """
 
     # Get the Python executable from FACE_DETECTION_PATH's venv
-    python_executable = os.path.join(
-        FACE_DETECTION_PATH, "venv", "Scripts", "python.exe"
-    )
+    # python_executable = os.path.join(
+    #    FACE_DETECTION_PATH, "venv", "Scripts", "python.exe"
+    # )
+    python_executable = "python"
     detect_script = os.path.join(FACE_DETECTION_PATH, "detect_v2.py")
 
     # Construct the command
@@ -430,9 +431,10 @@ def _process_final_generation_thread(
     print(f"Face detection result JSON: {face_detection_result_json}")
 
     # Create a masked video for each speaker
-    python_executable = os.path.join(
-        FACE_DETECTION_PATH, "venv", "Scripts", "python.exe"
-    )
+    # python_executable = os.path.join(
+    #    FACE_DETECTION_PATH, "venv", "Scripts", "python.exe"
+    #)
+    python_executable = "python"
     mask_script = os.path.join(FACE_DETECTION_PATH, "mask_video_v2.py")
 
     cluster_json = json.dumps(cluster_mapping)
@@ -487,9 +489,10 @@ def _process_final_generation_thread(
         """
         python inference.py --checkpoint_path wav2lip_gan.pth --face "F:\School\FYP2\backend_frontend_ui\backend\public\phase5\masked_vid_1.mp4" --audio "F:\School\FYP2\backend_frontend_ui\backend\public\phase5\SPEAKER_01.wav" --outfile "F:\School\FYP2\backend_frontend_ui\backend\public\phase5\SPEAKER_01.mp4"
         """
-        python_wav_executable = os.path.join(
-            WAV_2_LIP_PATH, "venv", "Scripts", "python.exe"
-        )
+        # python_wav_executable = os.path.join(
+        #    WAV_2_LIP_PATH, "venv", "Scripts", "python.exe"
+        # )
+        python_wav_executable = "python"
         inference_script = os.path.join(WAV_2_LIP_PATH, "inference.py")
         wav2lip_model = os.path.join(WAV_2_LIP_PATH, "wav2lip.pth")
 
